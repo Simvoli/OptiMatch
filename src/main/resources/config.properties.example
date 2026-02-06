@@ -1,0 +1,9 @@
+# OptiMatch Database Configuration
+# Copy this file to config.properties and fill in your credentials
+db.url=jdbc:mysql://localhost:3306/optimatch
+db.user=root
+db.password=YOUR_PASSWORD_HERE
+
+# Connection pool settings (for future use)
+db.pool.size=10
+db.pool.timeout=30000
