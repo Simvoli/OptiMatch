@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.optimatch.view.MainController"
+            styleClass="main-container">
+
+    <!-- Top Navigation Bar -->
+    <top>
+        <HBox styleClass="nav-bar" spacing="10" alignment="CENTER_LEFT">
+            <padding>
+                <Insets top="10" right="20" bottom="10" left="20"/>
+            </padding>
+
+            <Label text="OptiMatch" styleClass="app-title"/>
+
+            <Region HBox.hgrow="ALWAYS"/>
+
+            <Button text="Students" onAction="#showStudents" styleClass="nav-button"/>
+            <Button text="Projects" onAction="#showProjects" styleClass="nav-button"/>
+            <Button text="Run Algorithm" onAction="#showAlgorithm" styleClass="nav-button, primary-button"/>
+            <Button text="Results" onAction="#showResults" styleClass="nav-button"/>
+        </HBox>
+    </top>
+
+    <!-- Center Content Area -->
+    <center>
+        <StackPane fx:id="contentArea">
+            <fx:include source="students.fxml"/>
+        </StackPane>
+    </center>
+
+    <!-- Bottom Status Bar -->
+    <bottom>
+        <HBox styleClass="status-bar" spacing="10" alignment="CENTER_LEFT">
+            <padding>
+                <Insets top="5" right="20" bottom="5" left="20"/>
+            </padding>
+            <Label fx:id="statusLabel" text="Ready"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label fx:id="connectionStatus" text="Database: Connected" styleClass="connection-status"/>
+        </HBox>
+    </bottom>
+
+</BorderPane>
