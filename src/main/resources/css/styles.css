@@ -1,0 +1,319 @@
+/* ==================== OptiMatch Styles ==================== */
+
+/* Color Variables */
+.root {
+    -om-primary: #3498db;
+    -om-primary-dark: #2980b9;
+    -om-secondary: #95a5a6;
+    -om-success: #27ae60;
+    -om-danger: #e74c3c;
+    -om-warning: #f39c12;
+    -om-bg-light: #f8f9fa;
+    -om-bg-dark: #2c3e50;
+    -om-text-dark: #2c3e50;
+    -om-text-light: #7f8c8d;
+    -om-border: #dce0e3;
+}
+
+/* ==================== Main Container ==================== */
+
+.main-container {
+    -fx-background-color: -om-bg-light;
+}
+
+/* ==================== Navigation Bar ==================== */
+
+.nav-bar {
+    -fx-background-color: -om-bg-dark;
+    -fx-padding: 10 20;
+}
+
+.app-title {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+}
+
+.nav-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-padding: 8 16;
+    -fx-cursor: hand;
+    -fx-background-radius: 4;
+}
+
+.nav-button:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+}
+
+.nav-button:pressed {
+    -fx-background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* ==================== Status Bar ==================== */
+
+.status-bar {
+    -fx-background-color: #ecf0f1;
+    -fx-border-color: -om-border;
+    -fx-border-width: 1 0 0 0;
+}
+
+.status-bar .label {
+    -fx-font-size: 12px;
+    -fx-text-fill: -om-text-light;
+}
+
+.connection-status {
+    -fx-font-weight: bold;
+}
+
+/* ==================== Content Pane ==================== */
+
+.content-pane {
+    -fx-background-color: -om-bg-light;
+}
+
+/* ==================== List Panel ==================== */
+
+.list-panel {
+    -fx-background-color: white;
+    -fx-border-color: -om-border;
+    -fx-border-width: 0 1 0 0;
+}
+
+.count-label {
+    -fx-font-size: 12px;
+    -fx-text-fill: -om-text-light;
+    -fx-alignment: center;
+}
+
+/* ==================== Form Panel ==================== */
+
+.form-panel {
+    -fx-background-color: white;
+}
+
+.form-scroll {
+    -fx-background-color: transparent;
+    -fx-background: white;
+}
+
+.form-scroll > .viewport {
+    -fx-background-color: white;
+}
+
+.form-title {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -om-text-dark;
+}
+
+.section-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -om-primary;
+    -fx-padding: 10 0 5 0;
+}
+
+.hint-label {
+    -fx-font-size: 12px;
+    -fx-text-fill: -om-text-light;
+    -fx-font-style: italic;
+}
+
+.status-message {
+    -fx-font-size: 13px;
+    -fx-padding: 10 0;
+}
+
+/* ==================== Form Controls ==================== */
+
+.text-field, .text-area {
+    -fx-background-color: white;
+    -fx-border-color: -om-border;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-padding: 8 12;
+    -fx-font-size: 14px;
+}
+
+.text-field:focused, .text-area:focused {
+    -fx-border-color: -om-primary;
+    -fx-border-width: 2;
+}
+
+.combo-box {
+    -fx-background-color: white;
+    -fx-border-color: -om-border;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-padding: 4 8;
+    -fx-font-size: 14px;
+}
+
+.combo-box:focused {
+    -fx-border-color: -om-primary;
+}
+
+.spinner {
+    -fx-background-color: white;
+    -fx-border-color: -om-border;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+}
+
+.spinner .text-field {
+    -fx-border-width: 0;
+}
+
+/* ==================== Buttons ==================== */
+
+.button {
+    -fx-background-radius: 4;
+    -fx-padding: 8 16;
+    -fx-font-size: 14px;
+    -fx-cursor: hand;
+}
+
+.primary-button {
+    -fx-background-color: -om-primary;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.primary-button:hover {
+    -fx-background-color: -om-primary-dark;
+}
+
+.primary-button:pressed {
+    -fx-background-color: derive(-om-primary-dark, -10%);
+}
+
+.secondary-button {
+    -fx-background-color: -om-secondary;
+    -fx-text-fill: white;
+}
+
+.secondary-button:hover {
+    -fx-background-color: derive(-om-secondary, -10%);
+}
+
+.danger-button {
+    -fx-background-color: -om-danger;
+    -fx-text-fill: white;
+}
+
+.danger-button:hover {
+    -fx-background-color: derive(-om-danger, -10%);
+}
+
+.small-button {
+    -fx-padding: 4 8;
+    -fx-font-size: 12px;
+    -fx-background-color: -om-secondary;
+    -fx-text-fill: white;
+}
+
+/* ==================== Table ==================== */
+
+.data-table {
+    -fx-background-color: white;
+    -fx-border-color: -om-border;
+    -fx-border-radius: 4;
+}
+
+.data-table .column-header {
+    -fx-background-color: #f1f3f4;
+    -fx-border-color: -om-border;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 8;
+    -fx-font-weight: bold;
+}
+
+.data-table .table-row-cell {
+    -fx-background-color: white;
+    -fx-border-color: transparent transparent -om-border transparent;
+}
+
+.data-table .table-row-cell:selected {
+    -fx-background-color: derive(-om-primary, 80%);
+}
+
+.data-table .table-row-cell:hover {
+    -fx-background-color: #f8f9fa;
+}
+
+.data-table .table-row-cell:selected:hover {
+    -fx-background-color: derive(-om-primary, 70%);
+}
+
+.data-table .table-cell {
+    -fx-padding: 8;
+    -fx-font-size: 13px;
+}
+
+/* ==================== Preference Labels ==================== */
+
+.pref-label-1 { -fx-text-fill: #27ae60; -fx-font-weight: bold; }
+.pref-label-2 { -fx-text-fill: #2ecc71; }
+.pref-label-3 { -fx-text-fill: #f39c12; }
+.pref-label-4 { -fx-text-fill: #e67e22; }
+.pref-label-5 { -fx-text-fill: #e74c3c; }
+
+/* ==================== Separator ==================== */
+
+.separator {
+    -fx-padding: 10 0;
+}
+
+.separator .line {
+    -fx-border-color: -om-border;
+    -fx-border-width: 1 0 0 0;
+}
+
+/* ==================== Scrollbar ==================== */
+
+.scroll-bar {
+    -fx-background-color: transparent;
+}
+
+.scroll-bar .thumb {
+    -fx-background-color: #c0c0c0;
+    -fx-background-radius: 4;
+}
+
+.scroll-bar .thumb:hover {
+    -fx-background-color: #a0a0a0;
+}
+
+.scroll-bar .increment-button,
+.scroll-bar .decrement-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.scroll-bar .increment-arrow,
+.scroll-bar .decrement-arrow {
+    -fx-shape: "";
+    -fx-padding: 0;
+}
+
+/* ==================== Alert Dialog ==================== */
+
+.alert .dialog-pane {
+    -fx-background-color: white;
+}
+
+.alert .dialog-pane .header-panel {
+    -fx-background-color: -om-bg-light;
+}
+
+/* ==================== Tooltip ==================== */
+
+.tooltip {
+    -fx-background-color: -om-bg-dark;
+    -fx-text-fill: white;
+    -fx-padding: 8 12;
+    -fx-background-radius: 4;
+}
