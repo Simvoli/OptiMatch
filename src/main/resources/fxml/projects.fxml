@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.optimatch.view.ProjectController"
+            styleClass="content-pane">
+
+    <!-- Left Side: Project List -->
+    <left>
+        <VBox styleClass="list-panel" spacing="10" prefWidth="400">
+            <padding>
+                <Insets top="15" right="15" bottom="15" left="15"/>
+            </padding>
+
+            <!-- Search Box -->
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <TextField fx:id="searchField" promptText="Search projects..." HBox.hgrow="ALWAYS"/>
+                <Button text="Clear" onAction="#clearSearch" styleClass="secondary-button"/>
+            </HBox>
+
+            <!-- Project Table -->
+            <TableView fx:id="projectTable" VBox.vgrow="ALWAYS" styleClass="data-table">
+                <columns>
+                    <TableColumn fx:id="colCode" text="Code" prefWidth="80"/>
+                    <TableColumn fx:id="colName" text="Name" prefWidth="180"/>
+                    <TableColumn fx:id="colCapacity" text="Capacity" prefWidth="70"/>
+                    <TableColumn fx:id="colGpa" text="Min GPA" prefWidth="60"/>
+                </columns>
+                <placeholder>
+                    <Label text="No projects found"/>
+                </placeholder>
+            </TableView>
+
+            <!-- List Actions -->
+            <HBox spacing="10" alignment="CENTER">
+                <Button text="New Project" onAction="#newProject" styleClass="primary-button"/>
+                <Button text="Refresh" onAction="#refresh" styleClass="secondary-button"/>
+            </HBox>
+
+            <!-- Project Count -->
+            <Label fx:id="countLabel" text="0 projects" styleClass="count-label"/>
+            <Label fx:id="capacityLabel" text="Total capacity: 0 students" styleClass="count-label"/>
+        </VBox>
+    </left>
+
+    <!-- Center: Project Form -->
+    <center>
+        <ScrollPane fitToWidth="true" styleClass="form-scroll">
+            <VBox styleClass="form-panel" spacing="15">
+                <padding>
+                    <Insets top="20" right="25" bottom="20" left="25"/>
+                </padding>
+
+                <!-- Form Title -->
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                    <Label fx:id="formTitle" text="New Project" styleClass="form-title"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Button fx:id="deleteButton" text="Delete" onAction="#deleteProject"
+                            styleClass="danger-button" visible="false"/>
+                </HBox>
+
+                <Separator/>
+
+                <!-- Basic Information Section -->
+                <Label text="Basic Information" styleClass="section-title"/>
+
+                <GridPane hgap="15" vgap="12" styleClass="form-grid">
+                    <columnConstraints>
+                        <ColumnConstraints minWidth="120" halignment="RIGHT"/>
+                        <ColumnConstraints hgrow="ALWAYS" minWidth="200"/>
+                    </columnConstraints>
+
+                    <!-- Project Code -->
+                    <Label text="Project Code:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                    <TextField fx:id="codeField" promptText="e.g., CS101"
+                               GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+                    <!-- Name -->
+                    <Label text="Project Name:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                    <TextField fx:id="nameField" promptText="Enter project name"
+                               GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+                    <!-- Description -->
+                    <Label text="Description:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                    <TextArea fx:id="descriptionArea" promptText="Enter project description (optional)"
+                              GridPane.rowIndex="2" GridPane.columnIndex="1"
+                              prefRowCount="3" wrapText="true"/>
+                </GridPane>
+
+                <Separator/>
+
+                <!-- Capacity Section -->
+                <Label text="Capacity Settings" styleClass="section-title"/>
+                <Label text="Define the minimum and maximum number of students for this project"
+                       styleClass="hint-label"/>
+
+                <GridPane hgap="15" vgap="12" styleClass="form-grid">
+                    <columnConstraints>
+                        <ColumnConstraints minWidth="120" halignment="RIGHT"/>
+                        <ColumnConstraints hgrow="ALWAYS" minWidth="200"/>
+                    </columnConstraints>
+
+                    <!-- Min Capacity -->
+                    <Label text="Min Capacity:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                    <HBox spacing="10" alignment="CENTER_LEFT"
+                          GridPane.rowIndex="0" GridPane.columnIndex="1">
+                        <Spinner fx:id="minCapacitySpinner" editable="true" prefWidth="100"/>
+                        <Label text="minimum students required" styleClass="hint-label"/>
+                    </HBox>
+
+                    <!-- Max Capacity -->
+                    <Label text="Max Capacity:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                    <HBox spacing="10" alignment="CENTER_LEFT"
+                          GridPane.rowIndex="1" GridPane.columnIndex="1">
+                        <Spinner fx:id="maxCapacitySpinner" editable="true" prefWidth="100"/>
+                        <Label text="maximum students allowed" styleClass="hint-label"/>
+                    </HBox>
+                </GridPane>
+
+                <Separator/>
+
+                <!-- Requirements Section -->
+                <Label text="Requirements" styleClass="section-title"/>
+                <Label text="Set minimum GPA requirement (0 = no requirement)"
+                       styleClass="hint-label"/>
+
+                <GridPane hgap="15" vgap="12" styleClass="form-grid">
+                    <columnConstraints>
+                        <ColumnConstraints minWidth="120" halignment="RIGHT"/>
+                        <ColumnConstraints hgrow="ALWAYS" minWidth="200"/>
+                    </columnConstraints>
+
+                    <!-- Required GPA -->
+                    <Label text="Min GPA:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                    <HBox spacing="10" alignment="CENTER_LEFT"
+                          GridPane.rowIndex="0" GridPane.columnIndex="1">
+                        <Spinner fx:id="requiredGpaSpinner" editable="true" prefWidth="100"/>
+                        <Label text="(0.00 - 4.00)" styleClass="hint-label"/>
+                    </HBox>
+                </GridPane>
+
+                <Region VBox.vgrow="ALWAYS"/>
+
+                <Separator/>
+
+                <!-- Form Actions -->
+                <HBox spacing="15" alignment="CENTER_RIGHT">
+                    <Button text="Clear Form" onAction="#clearForm" styleClass="secondary-button"/>
+                    <Button fx:id="saveButton" text="Save Project" onAction="#saveProject"
+                            styleClass="primary-button" prefWidth="120"/>
+                </HBox>
+
+                <!-- Status Message -->
+                <Label fx:id="statusLabel" text="" styleClass="status-message"/>
+
+            </VBox>
+        </ScrollPane>
+    </center>
+
+</BorderPane>
