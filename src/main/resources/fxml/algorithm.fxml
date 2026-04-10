@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.optimatch.view.AlgorithmController"
+            styleClass="content-pane">
+
+    <!-- Left Side: Configuration Panel -->
+    <left>
+        <ScrollPane fitToWidth="true" styleClass="form-scroll" prefWidth="380">
+            <VBox styleClass="form-panel" spacing="15">
+                <padding>
+                    <Insets top="20" right="20" bottom="20" left="20"/>
+                </padding>
+
+                <!-- Data Summary -->
+                <Label text="Data Summary" styleClass="form-title"/>
+                <Separator/>
+
+                <HBox spacing="20" alignment="CENTER_LEFT">
+                    <VBox spacing="5">
+                        <Label fx:id="studentCountLabel" text="0 students" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+                        <Label fx:id="projectCountLabel" text="0 projects" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+                    </VBox>
+                    <VBox spacing="5">
+                        <Label fx:id="capacityLabel" text="Capacity: 0 slots" styleClass="hint-label"/>
+                        <Label fx:id="dataStatusLabel" text="Ready" style="-fx-font-weight: bold;"/>
+                    </VBox>
+                </HBox>
+
+                <Separator/>
+
+                <!-- Presets -->
+                <Label text="Quick Presets" styleClass="section-title"/>
+                <FlowPane hgap="8" vgap="8">
+                    <Button text="Small" onAction="#applySmallPreset" styleClass="secondary-button" prefWidth="65"/>
+                    <Button text="Medium" onAction="#applyMediumPreset" styleClass="secondary-button" prefWidth="65"/>
+                    <Button text="Large" onAction="#applyLargePreset" styleClass="secondary-button" prefWidth="65"/>
+                    <Button text="Quick" onAction="#applyQuickPreset" styleClass="secondary-button" prefWidth="65"/>
+                    <Button text="HQ" onAction="#applyHighQualityPreset" styleClass="primary-button" prefWidth="65">
+                        <tooltip><Tooltip text="High Quality - Maximum optimization, slower execution"/></tooltip>
+                    </Button>
+                </FlowPane>
+                <Label text="Small: &lt;50 | Medium: 50-200 | Large: &gt;200 | Quick: Test | HQ: Best results"
+                       styleClass="hint-label" wrapText="true"/>
+
+                <Separator/>
+
+                <!-- GA Configuration -->
+                <Label text="Algorithm Parameters" styleClass="section-title"/>
+
+                <GridPane hgap="15" vgap="10" styleClass="form-grid">
+                    <columnConstraints>
+                        <ColumnConstraints minWidth="130" halignment="RIGHT"/>
+                        <ColumnConstraints hgrow="ALWAYS" minWidth="120"/>
+                    </columnConstraints>
+
+                    <!-- Population Size -->
+                    <Label text="Population Size:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                    <Spinner fx:id="populationSpinner" editable="true" prefWidth="120"
+                             GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+                    <!-- Max Generations -->
+                    <Label text="Max Generations:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                    <Spinner fx:id="generationsSpinner" editable="true" prefWidth="120"
+                             GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+                    <!-- Mutation Rate -->
+                    <Label text="Mutation Rate:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                    <Spinner fx:id="mutationSpinner" editable="true" prefWidth="120"
+                             GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+                    <!-- Crossover Rate -->
+                    <Label text="Crossover Rate:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                    <Spinner fx:id="crossoverSpinner" editable="true" prefWidth="120"
+                             GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+                    <!-- Elite Percentage -->
+                    <Label text="Elite Percentage:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+                    <Spinner fx:id="eliteSpinner" editable="true" prefWidth="120"
+                             GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+
+                    <!-- Tournament Size -->
+                    <Label text="Tournament Size:" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+                    <Spinner fx:id="tournamentSpinner" editable="true" prefWidth="120"
+                             GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+                </GridPane>
+
+                <Separator/>
+
+                <!-- Convergence Settings -->
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <CheckBox fx:id="convergenceCheckbox" text="Enable Convergence Detection"/>
+                </HBox>
+
+                <GridPane hgap="15" vgap="10" styleClass="form-grid">
+                    <columnConstraints>
+                        <ColumnConstraints minWidth="130" halignment="RIGHT"/>
+                        <ColumnConstraints hgrow="ALWAYS" minWidth="120"/>
+                    </columnConstraints>
+
+                    <Label text="Stagnation Gens:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                    <Spinner fx:id="convergenceGenSpinner" editable="true" prefWidth="120"
+                             GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+                </GridPane>
+                <Label text="Stop early if no improvement for N generations" styleClass="hint-label"/>
+
+            </VBox>
+        </ScrollPane>
+    </left>
+
+    <!-- Center: Execution Panel -->
+    <center>
+        <VBox styleClass="form-panel" spacing="20">
+            <padding>
+                <Insets top="20" right="25" bottom="20" left="25"/>
+            </padding>
+
+            <!-- Execution Controls -->
+            <Label text="Run Algorithm" styleClass="form-title"/>
+            <Separator/>
+
+            <HBox spacing="15" alignment="CENTER">
+                <Button fx:id="runButton" text="Run Algorithm" onAction="#runAlgorithm"
+                        styleClass="primary-button" prefWidth="150" prefHeight="40"
+                        style="-fx-font-size: 16px;"/>
+                <Button fx:id="stopButton" text="Stop" onAction="#stopAlgorithm"
+                        styleClass="danger-button" prefWidth="100" prefHeight="40"/>
+            </HBox>
+
+            <Separator/>
+
+            <!-- Progress Section -->
+            <Label text="Progress" styleClass="section-title"/>
+
+            <ProgressBar fx:id="progressBar" prefWidth="Infinity" prefHeight="25" progress="0"/>
+
+            <GridPane hgap="30" vgap="10">
+                <columnConstraints>
+                    <ColumnConstraints hgrow="ALWAYS"/>
+                    <ColumnConstraints hgrow="ALWAYS"/>
+                </columnConstraints>
+
+                <Label fx:id="generationLabel" text="Generation: 0 / 1000"
+                       style="-fx-font-size: 14px;"
+                       GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                <Label fx:id="timeLabel" text="Time: 0.0s"
+                       style="-fx-font-size: 14px;"
+                       GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+                <Label fx:id="fitnessLabel" text="Best Fitness: 0.00"
+                       style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #27ae60;"
+                       GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                <Label fx:id="avgFitnessLabel" text="Avg Fitness: 0.00"
+                       style="-fx-font-size: 14px;"
+                       GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+            </GridPane>
+
+            <Separator/>
+
+            <!-- Run History -->
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <Label text="Run History" styleClass="section-title"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="Refresh" onAction="#refresh" styleClass="secondary-button"/>
+                <Button text="Delete" onAction="#deleteSelectedRun" styleClass="danger-button"/>
+            </HBox>
+
+            <TableView fx:id="historyTable" VBox.vgrow="ALWAYS" styleClass="data-table" prefHeight="200">
+                <columns>
+                    <TableColumn fx:id="colDate" text="Date/Time" prefWidth="150"/>
+                    <TableColumn fx:id="colGenerations" text="Generations" prefWidth="100"/>
+                    <TableColumn fx:id="colFitness" text="Best Fitness" prefWidth="100"/>
+                    <TableColumn fx:id="colTime" text="Duration" prefWidth="80"/>
+                </columns>
+                <placeholder>
+                    <Label text="No previous runs"/>
+                </placeholder>
+            </TableView>
+
+            <Region VBox.vgrow="ALWAYS"/>
+
+            <!-- Status Message -->
+            <Label fx:id="statusLabel" text="" styleClass="status-message"/>
+
+        </VBox>
+    </center>
+
+</BorderPane>
