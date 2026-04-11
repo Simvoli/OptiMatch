@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.optimatch.view.ResultsController"
+            styleClass="content-pane">
+
+    <!-- Top: Run Selector and Summary -->
+    <top>
+        <VBox styleClass="form-panel" spacing="15">
+            <padding>
+                <Insets top="15" right="20" bottom="15" left="20"/>
+            </padding>
+
+            <!-- Run Selector Row -->
+            <HBox spacing="15" alignment="CENTER_LEFT">
+                <Label text="Select Run:" style="-fx-font-weight: bold;"/>
+                <ComboBox fx:id="runSelector" prefWidth="350"/>
+                <Button text="Refresh" onAction="#refresh" styleClass="secondary-button"/>
+                <Button fx:id="deleteRunButton" text="Delete Run" onAction="#deleteRun" styleClass="danger-button"/>
+                <Region HBox.hgrow="ALWAYS"/>
+
+                <!-- Export Buttons -->
+                <Label text="Export:" style="-fx-font-weight: bold;"/>
+                <MenuButton text="Export Data" styleClass="primary-button">
+                    <items>
+                        <MenuItem text="Students (CSV)" onAction="#exportStudentsCsv"/>
+                        <MenuItem text="Projects (CSV)" onAction="#exportProjectsCsv"/>
+                        <MenuItem text="Generations (CSV)" onAction="#exportGenerationsCsv"/>
+                        <SeparatorMenuItem/>
+                        <MenuItem text="Full Report (TXT)" onAction="#exportFullReport"/>
+                    </items>
+                </MenuButton>
+            </HBox>
+
+            <Separator/>
+
+            <!-- Summary Statistics -->
+            <HBox spacing="40" alignment="CENTER">
+                <!-- Basic Stats -->
+                <VBox spacing="5" alignment="CENTER">
+                    <Label text="Students" styleClass="hint-label"/>
+                    <Label fx:id="totalStudentsLabel" text="0 students" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+                </VBox>
+
+                <VBox spacing="5" alignment="CENTER">
+                    <Label text="Projects" styleClass="hint-label"/>
+                    <Label fx:id="totalProjectsLabel" text="0 projects" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+                </VBox>
+
+                <VBox spacing="5" alignment="CENTER">
+                    <Label text="Best Fitness" styleClass="hint-label"/>
+                    <Label fx:id="bestFitnessLabel" text="0.00" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #3498db;"/>
+                </VBox>
+
+                <VBox spacing="5" alignment="CENTER">
+                    <Label text="Satisfaction" styleClass="hint-label"/>
+                    <Label fx:id="satisfactionLabel" text="0.0%" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #27ae60;"/>
+                </VBox>
+
+                <Separator orientation="VERTICAL"/>
+
+                <!-- Preference Distribution -->
+                <VBox spacing="3" alignment="CENTER_LEFT">
+                    <Label text="Preference Distribution" styleClass="hint-label"/>
+                    <HBox spacing="15">
+                        <VBox spacing="2" alignment="CENTER">
+                            <Label text="1st" style="-fx-text-fill: #27ae60; -fx-font-weight: bold;"/>
+                            <Label fx:id="firstChoiceLabel" text="0"/>
+                        </VBox>
+                        <VBox spacing="2" alignment="CENTER">
+                            <Label text="2nd" style="-fx-text-fill: #2ecc71;"/>
+                            <Label fx:id="secondChoiceLabel" text="0"/>
+                        </VBox>
+                        <VBox spacing="2" alignment="CENTER">
+                            <Label text="3rd" style="-fx-text-fill: #f39c12;"/>
+                            <Label fx:id="thirdChoiceLabel" text="0"/>
+                        </VBox>
+                        <VBox spacing="2" alignment="CENTER">
+                            <Label text="4th" style="-fx-text-fill: #e67e22;"/>
+                            <Label fx:id="fourthChoiceLabel" text="0"/>
+                        </VBox>
+                        <VBox spacing="2" alignment="CENTER">
+                            <Label text="5th" style="-fx-text-fill: #e74c3c;"/>
+                            <Label fx:id="fifthChoiceLabel" text="0"/>
+                        </VBox>
+                        <VBox spacing="2" alignment="CENTER">
+                            <Label text="None" style="-fx-text-fill: #95a5a6;"/>
+                            <Label fx:id="unmatchedLabel" text="0"/>
+                        </VBox>
+                    </HBox>
+                </VBox>
+            </HBox>
+        </VBox>
+    </top>
+
+    <!-- Center: Tab Pane with Student and Project Views -->
+    <center>
+        <TabPane tabClosingPolicy="UNAVAILABLE">
+            <padding>
+                <Insets top="10" right="15" bottom="15" left="15"/>
+            </padding>
+
+            <!-- Student Assignments Tab -->
+            <Tab text="Student Assignments">
+                <VBox spacing="10">
+                    <padding>
+                        <Insets top="10" right="0" bottom="0" left="0"/>
+                    </padding>
+
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="Student assignment results - sorted by student name" styleClass="hint-label"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Button text="Export CSV" onAction="#exportStudentsCsv" styleClass="secondary-button"/>
+                    </HBox>
+
+                    <TableView fx:id="studentTable" VBox.vgrow="ALWAYS" styleClass="data-table">
+                        <columns>
+                            <TableColumn fx:id="colStudentId" text="Student ID" prefWidth="100"/>
+                            <TableColumn fx:id="colStudentName" text="Name" prefWidth="180"/>
+                            <TableColumn fx:id="colAssignedProject" text="Assigned Project" prefWidth="300"/>
+                            <TableColumn fx:id="colPreferenceRank" text="Rank" prefWidth="70"/>
+                            <TableColumn fx:id="colSatisfaction" text="Score" prefWidth="70"/>
+                        </columns>
+                        <placeholder>
+                            <Label text="No assignments to display. Run the algorithm first."/>
+                        </placeholder>
+                    </TableView>
+                </VBox>
+            </Tab>
+
+            <!-- Project Assignments Tab -->
+            <Tab text="Project Assignments">
+                <VBox spacing="10">
+                    <padding>
+                        <Insets top="10" right="0" bottom="0" left="0"/>
+                    </padding>
+
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="Project assignment results - sorted by project code" styleClass="hint-label"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Button text="Export CSV" onAction="#exportProjectsCsv" styleClass="secondary-button"/>
+                    </HBox>
+
+                    <TableView fx:id="projectTable" VBox.vgrow="ALWAYS" styleClass="data-table">
+                        <columns>
+                            <TableColumn fx:id="colProjectCode" text="Code" prefWidth="100"/>
+                            <TableColumn fx:id="colProjectName" text="Project Name" prefWidth="250"/>
+                            <TableColumn fx:id="colCapacity" text="Capacity" prefWidth="80"/>
+                            <TableColumn fx:id="colAssignedCount" text="Assigned" prefWidth="80"/>
+                            <TableColumn fx:id="colStatus" text="Status" prefWidth="80"/>
+                        </columns>
+                        <placeholder>
+                            <Label text="No projects to display. Run the algorithm first."/>
+                        </placeholder>
+                    </TableView>
+                </VBox>
+            </Tab>
+
+            <!-- Generations Tab -->
+            <Tab text="Generations">
+                <VBox spacing="10">
+                    <padding>
+                        <Insets top="10" right="0" bottom="0" left="0"/>
+                    </padding>
+
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="Population statistics per generation - showing algorithm convergence" styleClass="hint-label"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Button text="Export CSV" onAction="#exportGenerationsCsv" styleClass="secondary-button"/>
+                    </HBox>
+
+                    <TableView fx:id="generationsTable" VBox.vgrow="ALWAYS" styleClass="data-table">
+                        <columns>
+                            <TableColumn fx:id="colGeneration" text="Gen #" prefWidth="60"/>
+                            <TableColumn fx:id="colGenBestFitness" text="Best" prefWidth="90"/>
+                            <TableColumn fx:id="colGenAvgFitness" text="Average" prefWidth="90"/>
+                            <TableColumn fx:id="colGenWorstFitness" text="Worst" prefWidth="90"/>
+                            <TableColumn fx:id="colGenStdDev" text="Std Dev" prefWidth="80"/>
+                            <TableColumn fx:id="colGenValidCount" text="Valid" prefWidth="60"/>
+                            <TableColumn fx:id="colGenBestEver" text="Best Ever" prefWidth="90"/>
+                        </columns>
+                        <placeholder>
+                            <Label text="No generation data to display. Run the algorithm first."/>
+                        </placeholder>
+                    </TableView>
+                </VBox>
+            </Tab>
+        </TabPane>
+    </center>
+
+    <!-- Bottom: Status Bar -->
+    <bottom>
+        <HBox styleClass="status-bar" spacing="10" alignment="CENTER_LEFT">
+            <padding>
+                <Insets top="8" right="20" bottom="8" left="20"/>
+            </padding>
+            <Label fx:id="statusLabel" text=""/>
+        </HBox>
+    </bottom>
+
+</BorderPane>
