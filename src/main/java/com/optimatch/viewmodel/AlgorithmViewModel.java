@@ -17,26 +17,23 @@ import javafx.collections.ObservableList;
 
 import java.util.concurrent.ExecutorService;
 
-/**
- * ViewModel for the Algorithm configuration and execution screen.
- * Handles GA parameter configuration, execution, and progress tracking.
- */
+// view model for the algorithm screen: parameters, run/stop, live progress, history
 public class AlgorithmViewModel {
 
     private final MatchingService matchingService;
     private final StudentService studentService;
     private final ProjectService projectService;
 
-    // Shared executor managed by AppLifecycle; shut down with the application.
+    // RU: один общий executor на все ViewModel-ы, останавливается при выходе из приложения
     private final ExecutorService executor = AppLifecycle.getBackgroundExecutor();
 
-    // Data summary
+    // data summary at the top of the screen
     private final IntegerProperty studentCount = new SimpleIntegerProperty(0);
     private final IntegerProperty projectCount = new SimpleIntegerProperty(0);
     private final IntegerProperty totalCapacity = new SimpleIntegerProperty(0);
     private final IntegerProperty minRequired = new SimpleIntegerProperty(0);
 
-    // Configuration parameters
+    // configuration sliders/spinners
     private final IntegerProperty populationSize = new SimpleIntegerProperty(200);
     private final IntegerProperty maxGenerations = new SimpleIntegerProperty(1000);
     private final DoubleProperty mutationRate = new SimpleDoubleProperty(0.02);
@@ -46,7 +43,7 @@ public class AlgorithmViewModel {
     private final BooleanProperty convergenceEnabled = new SimpleBooleanProperty(true);
     private final IntegerProperty convergenceGenerations = new SimpleIntegerProperty(50);
 
-    // Execution state
+    // execution state shown during a run
     private final BooleanProperty running = new SimpleBooleanProperty(false);
     private final IntegerProperty currentGeneration = new SimpleIntegerProperty(0);
     private final DoubleProperty bestFitness = new SimpleDoubleProperty(0);
@@ -54,44 +51,24 @@ public class AlgorithmViewModel {
     private final DoubleProperty progress = new SimpleDoubleProperty(0);
     private final LongProperty elapsedTimeMs = new SimpleLongProperty(0);
 
-    // Run history
+    // past runs shown in the history table
     private final ObservableList<AlgorithmRun> runHistory = FXCollections.observableArrayList();
 
-    // Status message
+    // status bar message
     private final StringProperty statusMessage = new SimpleStringProperty("");
-
-    // Latest result run ID (for navigation to results)
-    private final IntegerProperty latestRunId = new SimpleIntegerProperty(-1);
 
     private long startTime;
 
-    /**
-     * Creates an AlgorithmViewModel with default services.
-     */
+    // wires up services and loads initial data
     public AlgorithmViewModel() {
-        this(new MatchingService(), new StudentService(), new ProjectService());
-    }
-
-    /**
-     * Creates an AlgorithmViewModel with the specified services.
-     *
-     * @param matchingService the matching service
-     * @param studentService  the student service
-     * @param projectService  the project service
-     */
-    public AlgorithmViewModel(MatchingService matchingService,
-                              StudentService studentService,
-                              ProjectService projectService) {
-        this.matchingService = matchingService;
-        this.studentService = studentService;
-        this.projectService = projectService;
+        this.matchingService = new MatchingService();
+        this.studentService = new StudentService();
+        this.projectService = new ProjectService();
 
         refresh();
     }
 
-    /**
-     * Refreshes data summary and run history.
-     */
+    // reload data summary and run history
     public void refresh() {
         try {
             studentCount.set(studentService.getStudentCount());
@@ -108,11 +85,7 @@ public class AlgorithmViewModel {
         }
     }
 
-    /**
-     * Applies a preset configuration.
-     *
-     * @param preset the preset name ("small", "medium", "large", "quick", "highquality")
-     */
+    // copy values from a named preset into the form
     public void applyPreset(String preset) {
         GeneticAlgorithmConfig config = switch (preset.toLowerCase()) {
             case "small" -> GeneticAlgorithmConfig.forSmallDataset();
@@ -135,11 +108,7 @@ public class AlgorithmViewModel {
         statusMessage.set("Applied " + preset + " preset");
     }
 
-    /**
-     * Builds a configuration from the current UI values.
-     *
-     * @return the configuration
-     */
+    // assemble a config from the current form values
     public GeneticAlgorithmConfig buildConfig() {
         return new GeneticAlgorithmConfig()
                 .populationSize(populationSize.get())
@@ -152,15 +121,13 @@ public class AlgorithmViewModel {
                 .convergenceGenerations(convergenceGenerations.get());
     }
 
-    /**
-     * Starts the algorithm execution.
-     */
+    // start the GA on the background executor
     public void runAlgorithm() {
         if (running.get()) {
             return;
         }
 
-        // Validate data
+        // pre-flight checks
         if (studentCount.get() == 0) {
             statusMessage.set("Error: No students found. Add students first.");
             return;
@@ -175,22 +142,20 @@ public class AlgorithmViewModel {
             return;
         }
 
-        // Reset state
+        // reset progress state
         running.set(true);
         currentGeneration.set(0);
         bestFitness.set(0);
         averageFitness.set(0);
         progress.set(0);
         elapsedTimeMs.set(0);
-        latestRunId.set(-1);
         startTime = System.currentTimeMillis();
 
         statusMessage.set("Running algorithm...");
 
-        // Set progress callback
         matchingService.setProgressCallback(this::onGenerationComplete);
 
-        // Run in background thread
+        // run on background thread, post UI updates back to FX thread
         executor.submit(() -> {
             try {
                 GeneticAlgorithmConfig config = buildConfig();
@@ -198,7 +163,6 @@ public class AlgorithmViewModel {
 
                 Platform.runLater(() -> {
                     running.set(false);
-                    latestRunId.set(run.getId());
                     refresh();
                     statusMessage.set(String.format(
                             "Completed! Fitness: %.2f, Generations: %d, Time: %.2fs",
@@ -217,9 +181,7 @@ public class AlgorithmViewModel {
         });
     }
 
-    /**
-     * Stops the currently running algorithm.
-     */
+    // request a graceful stop
     public void stopAlgorithm() {
         if (running.get()) {
             matchingService.stopMatching();
@@ -227,11 +189,9 @@ public class AlgorithmViewModel {
         }
     }
 
-    /**
-     * Callback for generation completion.
-     */
+    // per-generation callback: snapshot values on the GA thread, then push to FX thread
     private void onGenerationComplete(int generation, Population population, Chromosome bestEver) {
-        // Capture values in the GA thread before passing to UI thread
+        // RU: считаем avg fitness прямо здесь, в потоке GA, чтобы не дёргать population из UI потока
         double avgFitness = population.getAverageFitness();
         double best = bestEver.getFitness();
         int maxGen = maxGenerations.get();
@@ -246,12 +206,7 @@ public class AlgorithmViewModel {
         });
     }
 
-    /**
-     * Deletes a run from history.
-     *
-     * @param run the run to delete
-     * @return true if successful
-     */
+    // remove a run from history
     public boolean deleteRun(AlgorithmRun run) {
         if (run == null) {
             return false;
@@ -267,12 +222,7 @@ public class AlgorithmViewModel {
         }
     }
 
-    /**
-     * Formats elapsed time for display.
-     *
-     * @param ms milliseconds
-     * @return formatted string
-     */
+    // format ms as either "M:SS" or "X.Xs"
     public static String formatElapsedTime(long ms) {
         long seconds = ms / 1000;
         long minutes = seconds / 60;
@@ -283,98 +233,105 @@ public class AlgorithmViewModel {
         return String.format("%.1fs", ms / 1000.0);
     }
 
-    /**
-     * Shuts down the shared background executor.
-     * Normally invoked centrally via {@link AppLifecycle#shutdown()} on
-     * application stop; exposed here for tests and tool-driven shutdowns.
-     */
-    public void shutdown() {
-        AppLifecycle.shutdown();
-    }
-
     // ==================== Property Getters ====================
 
+    // student count
     public IntegerProperty studentCountProperty() {
         return studentCount;
     }
 
+    // project count
     public IntegerProperty projectCountProperty() {
         return projectCount;
     }
 
+    // total max capacity
     public IntegerProperty totalCapacityProperty() {
         return totalCapacity;
     }
 
+    // total min capacity
     public IntegerProperty minRequiredProperty() {
         return minRequired;
     }
 
+    // population size field
     public IntegerProperty populationSizeProperty() {
         return populationSize;
     }
 
+    // max generations field
     public IntegerProperty maxGenerationsProperty() {
         return maxGenerations;
     }
 
+    // mutation rate field
     public DoubleProperty mutationRateProperty() {
         return mutationRate;
     }
 
+    // crossover rate field
     public DoubleProperty crossoverRateProperty() {
         return crossoverRate;
     }
 
+    // elite percentage field
     public DoubleProperty elitePercentageProperty() {
         return elitePercentage;
     }
 
+    // tournament size field
     public IntegerProperty tournamentSizeProperty() {
         return tournamentSize;
     }
 
+    // convergence toggle
     public BooleanProperty convergenceEnabledProperty() {
         return convergenceEnabled;
     }
 
+    // convergence window field
     public IntegerProperty convergenceGenerationsProperty() {
         return convergenceGenerations;
     }
 
+    // running flag
     public BooleanProperty runningProperty() {
         return running;
     }
 
+    // current generation number
     public IntegerProperty currentGenerationProperty() {
         return currentGeneration;
     }
 
+    // current best fitness
     public DoubleProperty bestFitnessProperty() {
         return bestFitness;
     }
 
+    // current average fitness
     public DoubleProperty averageFitnessProperty() {
         return averageFitness;
     }
 
+    // progress in [0, 1]
     public DoubleProperty progressProperty() {
         return progress;
     }
 
+    // elapsed time in ms
     public LongProperty elapsedTimeMsProperty() {
         return elapsedTimeMs;
     }
 
+    // history of past runs
     public ObservableList<AlgorithmRun> getRunHistory() {
         return runHistory;
     }
 
+    // status message
     public StringProperty statusMessageProperty() {
         return statusMessage;
-    }
-
-    public IntegerProperty latestRunIdProperty() {
-        return latestRunId;
     }
 }

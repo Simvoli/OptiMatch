@@ -1,6 +1,5 @@
 package com.optimatch;
 
-import com.optimatch.dao.DatabaseConnection;
 import com.optimatch.util.AppLifecycle;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -12,23 +11,19 @@ import javafx.stage.Stage;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- * Main entry point for the OptiMatch application.
- *
- * UI orientation can be switched to right-to-left for Hebrew users
- * by setting the system property {@code -Doptimatch.orientation=rtl}.
- */
+// app entry point
+// RU: системное свойство optimatch.orientation=rtl включает направление справа налево
+// (нужно для иврита)
 public class App extends Application {
 
     private static final Logger LOGGER = Logger.getLogger(App.class.getName());
 
     private static final String ORIENTATION_PROPERTY = "optimatch.orientation";
 
-    private static Scene scene;
-
+    // load main FXML and show the window
     @Override
     public void start(Stage stage) {
-        scene = new Scene(loadFXML("main"), 1200, 800);
+        Scene scene = new Scene(loadFXML("main"), 1200, 800);
         scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
 
         if ("rtl".equalsIgnoreCase(System.getProperty(ORIENTATION_PROPERTY, "ltr"))) {
@@ -42,27 +37,13 @@ public class App extends Application {
         stage.show();
     }
 
+    // shut down the background executor on exit
     @Override
     public void stop() {
         AppLifecycle.shutdown();
-        DatabaseConnection.closeConnection();
     }
 
-    /**
-     * Sets the root of the scene to the specified FXML file.
-     *
-     * @param fxml the FXML file name (without extension)
-     */
-    public static void setRoot(String fxml) {
-        scene.setRoot(loadFXML(fxml));
-    }
-
-    /**
-     * Loads an FXML file and returns its root node.
-     *
-     * @param fxml the FXML file name (without extension)
-     * @return the root node of the FXML
-     */
+    // load an FXML file by name
     private static Parent loadFXML(String fxml) {
         try {
             FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("/fxml/" + fxml + ".fxml"));
@@ -73,6 +54,7 @@ public class App extends Application {
         }
     }
 
+    // hand off to JavaFX runtime
     public static void main(String[] args) {
         launch();
     }

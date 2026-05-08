@@ -9,9 +9,7 @@ import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Unit tests for the Chromosome class.
- */
+// unit tests for Chromosome
 @DisplayName("Chromosome Tests")
 class ChromosomeTest {
 

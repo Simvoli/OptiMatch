@@ -2,24 +2,21 @@ package com.optimatch.algorithm;
 
 import java.util.Random;
 
-/**
- * Per-gene swap mutation operator.
- *
- * Each gene independently has probability {@code mutationRate} of being swapped
- * with another random gene. This is the standard interpretation of mutation rate
- * in GA literature and produces a number of mutations proportional to chromosome
- * length.
- */
+// per-gene swap mutation
+// RU: вероятность mutationRate проверяется на КАЖДЫЙ ген, не на всю хромосому,
+// поэтому ожидаемое число мутаций пропорционально длине хромосомы
 public class MutationOperator {
 
     private final Random random;
     private double mutationRate;
 
+    // default mutation rate of 0.02 per gene
     public MutationOperator(Random random) {
         this.random = random;
         this.mutationRate = 0.02;
     }
 
+    // try mutating each gene, returns true if at least one swap happened
     public boolean mutate(Chromosome chromosome) {
         int length = chromosome.getLength();
         if (length < 2) {
@@ -39,10 +36,12 @@ public class MutationOperator {
         return mutated;
     }
 
+    // current mutation rate
     public double getMutationRate() {
         return mutationRate;
     }
 
+    // update mutation rate, must be in [0, 1]
     public void setMutationRate(double mutationRate) {
         if (mutationRate < 0.0 || mutationRate > 1.0) {
             throw new IllegalArgumentException("Mutation rate must be between 0.0 and 1.0");

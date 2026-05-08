@@ -22,9 +22,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Unit tests for the ExportUtil class.
- */
+// unit tests for ExportUtil
 @DisplayName("ExportUtil Tests")
 class ExportUtilTest {
 

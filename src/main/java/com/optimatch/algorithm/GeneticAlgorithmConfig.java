@@ -1,167 +1,100 @@
 package com.optimatch.algorithm;
 
-/**
- * Configuration for the Genetic Algorithm.
- *
- * Recommended ranges:
- * - Population size: 100-500
- * - Max generations: 500-2000
- * - Mutation rate: 0.01-0.05
- * - Crossover rate: 0.7-0.9
- * - Elite percentage: 0.05-0.10 (5-10%)
- * - Tournament size: 3-5
- */
+// settings for one GA run, with fluent builder methods and a few presets
 public class GeneticAlgorithmConfig {
 
-    // Population settings
+    // population
     private int populationSize = 200;
     private int maxGenerations = 1000;
 
-    // Operator rates
+    // operators
     private double mutationRate = 0.02;
     private double crossoverRate = 0.8;
 
-    // Elitism
+    // elite share
     private double elitePercentage = 0.05;
 
-    // Selection
+    // tournament size for selection
     private int tournamentSize = 3;
 
-    // Convergence
+    // early stopping
     private boolean convergenceEnabled = true;
     private int convergenceGenerations = 50;
     private double convergenceThreshold = 0.001;
 
-    // Repair
+    // run constraint repair after operators
     private boolean repairEnabled = true;
 
-    // Random seed (null = random)
+    // null means non-deterministic
     private Long seed = null;
 
-    /**
-     * Creates a default configuration.
-     */
+    // default config (medium dataset)
     public GeneticAlgorithmConfig() {
     }
 
     // ==================== Builder Methods ====================
 
-    /**
-     * Sets the population size.
-     *
-     * @param populationSize number of chromosomes (100-500 recommended)
-     * @return this config for chaining
-     */
+    // set population size
     public GeneticAlgorithmConfig populationSize(int populationSize) {
         this.populationSize = populationSize;
         return this;
     }
 
-    /**
-     * Sets the maximum number of generations.
-     *
-     * @param maxGenerations maximum generations (500-2000 recommended)
-     * @return this config for chaining
-     */
+    // set max generations
     public GeneticAlgorithmConfig maxGenerations(int maxGenerations) {
         this.maxGenerations = maxGenerations;
         return this;
     }
 
-    /**
-     * Sets the mutation rate.
-     *
-     * @param mutationRate probability of mutation (0.01-0.05 recommended)
-     * @return this config for chaining
-     */
+    // set mutation rate
     public GeneticAlgorithmConfig mutationRate(double mutationRate) {
         this.mutationRate = mutationRate;
         return this;
     }
 
-    /**
-     * Sets the crossover rate.
-     *
-     * @param crossoverRate probability of crossover (0.7-0.9 recommended)
-     * @return this config for chaining
-     */
+    // set crossover rate
     public GeneticAlgorithmConfig crossoverRate(double crossoverRate) {
         this.crossoverRate = crossoverRate;
         return this;
     }
 
-    /**
-     * Sets the elite percentage.
-     *
-     * @param elitePercentage percentage to preserve (0.05-0.10 recommended)
-     * @return this config for chaining
-     */
+    // set elite percentage
     public GeneticAlgorithmConfig elitePercentage(double elitePercentage) {
         this.elitePercentage = elitePercentage;
         return this;
     }
 
-    /**
-     * Sets the tournament size.
-     *
-     * @param tournamentSize number of competitors (3-5 recommended)
-     * @return this config for chaining
-     */
+    // set tournament size
     public GeneticAlgorithmConfig tournamentSize(int tournamentSize) {
         this.tournamentSize = tournamentSize;
         return this;
     }
 
-    /**
-     * Enables or disables convergence detection.
-     *
-     * @param enabled true to enable early stopping on convergence
-     * @return this config for chaining
-     */
+    // toggle early stopping
     public GeneticAlgorithmConfig convergenceEnabled(boolean enabled) {
         this.convergenceEnabled = enabled;
         return this;
     }
 
-    /**
-     * Sets the number of generations to check for convergence.
-     *
-     * @param generations generations without improvement to trigger convergence
-     * @return this config for chaining
-     */
+    // set how many stagnant generations trigger early stop
     public GeneticAlgorithmConfig convergenceGenerations(int generations) {
         this.convergenceGenerations = generations;
         return this;
     }
 
-    /**
-     * Sets the convergence threshold.
-     *
-     * @param threshold minimum improvement required
-     * @return this config for chaining
-     */
+    // set minimum improvement that still counts as progress
     public GeneticAlgorithmConfig convergenceThreshold(double threshold) {
         this.convergenceThreshold = threshold;
         return this;
     }
 
-    /**
-     * Enables or disables constraint repair.
-     *
-     * @param enabled true to repair chromosomes after genetic operations
-     * @return this config for chaining
-     */
+    // toggle constraint repair
     public GeneticAlgorithmConfig repairEnabled(boolean enabled) {
         this.repairEnabled = enabled;
         return this;
     }
 
-    /**
-     * Sets the random seed for reproducibility.
-     *
-     * @param seed random seed (null for random)
-     * @return this config for chaining
-     */
+    // set rng seed (null for non-deterministic)
     public GeneticAlgorithmConfig seed(Long seed) {
         this.seed = seed;
         return this;
@@ -169,57 +102,64 @@ public class GeneticAlgorithmConfig {
 
     // ==================== Getters ====================
 
+    // population size
     public int getPopulationSize() {
         return populationSize;
     }
 
+    // max generations
     public int getMaxGenerations() {
         return maxGenerations;
     }
 
+    // mutation rate
     public double getMutationRate() {
         return mutationRate;
     }
 
+    // crossover rate
     public double getCrossoverRate() {
         return crossoverRate;
     }
 
+    // elite percentage
     public double getElitePercentage() {
         return elitePercentage;
     }
 
+    // tournament size
     public int getTournamentSize() {
         return tournamentSize;
     }
 
+    // is early stopping on
     public boolean isConvergenceEnabled() {
         return convergenceEnabled;
     }
 
+    // stagnation window size
     public int getConvergenceGenerations() {
         return convergenceGenerations;
     }
 
+    // stagnation threshold
     public double getConvergenceThreshold() {
         return convergenceThreshold;
     }
 
+    // is repair on
     public boolean isRepairEnabled() {
         return repairEnabled;
     }
 
+    // rng seed (null = random)
     public Long getSeed() {
         return seed;
     }
 
     // ==================== Presets ====================
 
-    /**
-     * Creates a configuration optimized for small datasets (< 50 students).
-     *
-     * @return configured instance
-     */
+    // tuned for fewer than 50 students
     public static GeneticAlgorithmConfig forSmallDataset() {
         return new GeneticAlgorithmConfig()
                 .populationSize(100)
@@ -230,11 +170,7 @@ public class GeneticAlgorithmConfig {
                 .tournamentSize(3);
     }
 
-    /**
-     * Creates a configuration optimized for medium datasets (50-200 students).
-     *
-     * @return configured instance
-     */
+    // tuned for 50 to 200 students
     public static GeneticAlgorithmConfig forMediumDataset() {
         return new GeneticAlgorithmConfig()
                 .populationSize(200)
@@ -245,11 +181,7 @@ public class GeneticAlgorithmConfig {
                 .tournamentSize(4);
     }
 
-    /**
-     * Creates a configuration optimized for large datasets (> 200 students).
-     *
-     * @return configured instance
-     */
+    // tuned for more than 200 students
     public static GeneticAlgorithmConfig forLargeDataset() {
         return new GeneticAlgorithmConfig()
                 .populationSize(500)
@@ -260,11 +192,7 @@ public class GeneticAlgorithmConfig {
                 .tournamentSize(5);
     }
 
-    /**
-     * Creates a fast configuration for quick testing.
-     *
-     * @return configured instance
-     */
+    // small and fast, for smoke tests
     public static GeneticAlgorithmConfig forQuickTest() {
         return new GeneticAlgorithmConfig()
                 .populationSize(50)
@@ -276,12 +204,7 @@ public class GeneticAlgorithmConfig {
                 .convergenceGenerations(20);
     }
 
-    /**
-     * Creates a high quality configuration for maximum optimization.
-     * Trades execution time for better results.
-     *
-     * @return configured instance
-     */
+    // best results, slowest run
     public static GeneticAlgorithmConfig forHighQuality() {
         return new GeneticAlgorithmConfig()
                 .populationSize(750)
@@ -296,11 +219,7 @@ public class GeneticAlgorithmConfig {
 
     // ==================== Validation ====================
 
-    /**
-     * Validates the configuration parameters.
-     *
-     * @throws IllegalStateException if any parameter is invalid
-     */
+    // throws if any parameter is out of range
     public void validate() {
         if (populationSize < 10) {
             throw new IllegalStateException("Population size must be at least 10");

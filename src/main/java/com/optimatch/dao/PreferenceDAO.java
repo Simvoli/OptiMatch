@@ -10,11 +10,10 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Data Access Object for the {@code preferences} table.
- */
+// CRUD for the preferences table
 public class PreferenceDAO {
 
+    // RU: rank закавычен, потому что в MySQL это зарезервированное слово
     private static final String INSERT_SQL =
             "INSERT INTO preferences (student_id, project_id, `rank`) VALUES (?, ?, ?)";
     private static final String DELETE_BY_STUDENT_SQL =
@@ -24,6 +23,7 @@ public class PreferenceDAO {
     private static final String SELECT_ALL_SQL =
             "SELECT id, student_id, project_id, `rank` FROM preferences ORDER BY student_id, `rank`";
 
+    // batch insert, generated ids written back into the list
     public void insertBatch(List<Preference> preferences) throws SQLException {
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(INSERT_SQL, Statement.RETURN_GENERATED_KEYS)) {
@@ -47,6 +47,7 @@ public class PreferenceDAO {
         }
     }
 
+    // delete every preference belonging to a student
     public int deleteByStudent(int studentId) throws SQLException {
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(DELETE_BY_STUDENT_SQL)) {
@@ -55,6 +56,7 @@ public class PreferenceDAO {
         }
     }
 
+    // load preferences for one student, ordered by rank
     public List<Preference> findByStudent(int studentId) throws SQLException {
         List<Preference> preferences = new ArrayList<>();
         try (Connection conn = DatabaseConnection.getConnection();
@@ -69,6 +71,7 @@ public class PreferenceDAO {
         return preferences;
     }
 
+    // load all preferences
     public List<Preference> findAll() throws SQLException {
         List<Preference> preferences = new ArrayList<>();
         try (Connection conn = DatabaseConnection.getConnection();
@@ -81,6 +84,7 @@ public class PreferenceDAO {
         return preferences;
     }
 
+    // row -> Preference
     private Preference mapResultSetToPreference(ResultSet rs) throws SQLException {
         Preference preference = new Preference();
         preference.setId(rs.getInt("id"));

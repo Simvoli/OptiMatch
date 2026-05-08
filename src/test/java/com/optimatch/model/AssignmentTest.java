@@ -6,9 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Unit tests for the Assignment model class.
- */
+// unit tests for Assignment
 @DisplayName("Assignment Model Tests")
 class AssignmentTest {
 

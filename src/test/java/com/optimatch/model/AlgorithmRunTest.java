@@ -8,9 +8,7 @@ import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Unit tests for the AlgorithmRun model class.
- */
+// unit tests for AlgorithmRun
 @DisplayName("AlgorithmRun Model Tests")
 class AlgorithmRunTest {
 

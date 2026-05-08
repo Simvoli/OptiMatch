@@ -8,18 +8,16 @@ import javafx.scene.control.*;
 
 import java.time.format.DateTimeFormatter;
 
-/**
- * Controller for the Algorithm configuration and execution screen.
- */
+// FXML controller for the algorithm screen
 public class AlgorithmController {
 
-    // Data summary labels
+    // data summary labels
     @FXML private Label studentCountLabel;
     @FXML private Label projectCountLabel;
     @FXML private Label capacityLabel;
     @FXML private Label dataStatusLabel;
 
-    // Configuration controls
+    // configuration controls
     @FXML private Spinner<Integer> populationSpinner;
     @FXML private Spinner<Integer> generationsSpinner;
     @FXML private Spinner<Double> mutationSpinner;
@@ -29,7 +27,7 @@ public class AlgorithmController {
     @FXML private CheckBox convergenceCheckbox;
     @FXML private Spinner<Integer> convergenceGenSpinner;
 
-    // Execution controls
+    // execution controls
     @FXML private Button runButton;
     @FXML private Button stopButton;
     @FXML private ProgressBar progressBar;
@@ -38,19 +36,20 @@ public class AlgorithmController {
     @FXML private Label avgFitnessLabel;
     @FXML private Label timeLabel;
 
-    // History table
+    // history table
     @FXML private TableView<AlgorithmRun> historyTable;
     @FXML private TableColumn<AlgorithmRun, String> colDate;
     @FXML private TableColumn<AlgorithmRun, Integer> colGenerations;
     @FXML private TableColumn<AlgorithmRun, Double> colFitness;
     @FXML private TableColumn<AlgorithmRun, String> colTime;
 
-    // Status
+    // status bar
     @FXML private Label statusLabel;
 
     private AlgorithmViewModel viewModel;
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
+    // FXML init
     @FXML
     public void initialize() {
         viewModel = new AlgorithmViewModel();
@@ -60,42 +59,38 @@ public class AlgorithmController {
         setupBindings();
     }
 
-    /**
-     * Sets up the spinner controls.
-     */
+    // configure all spinner ranges and steps
     private void setupSpinners() {
-        // Population size (10-1000)
+        // population (10 to 1000, step 50)
         populationSpinner.setValueFactory(
                 new SpinnerValueFactory.IntegerSpinnerValueFactory(10, 1000, 200, 50));
 
-        // Max generations (10-5000)
+        // generations (10 to 5000, step 100)
         generationsSpinner.setValueFactory(
                 new SpinnerValueFactory.IntegerSpinnerValueFactory(10, 5000, 1000, 100));
 
-        // Mutation rate (0.001-0.5)
+        // mutation rate (0.001 to 0.5)
         mutationSpinner.setValueFactory(
                 new SpinnerValueFactory.DoubleSpinnerValueFactory(0.001, 0.5, 0.02, 0.01));
 
-        // Crossover rate (0.1-1.0)
+        // crossover rate (0.1 to 1.0)
         crossoverSpinner.setValueFactory(
                 new SpinnerValueFactory.DoubleSpinnerValueFactory(0.1, 1.0, 0.8, 0.05));
 
-        // Elite percentage (0.01-0.5)
+        // elite percentage (0.01 to 0.5)
         eliteSpinner.setValueFactory(
                 new SpinnerValueFactory.DoubleSpinnerValueFactory(0.01, 0.5, 0.05, 0.01));
 
-        // Tournament size (2-10)
+        // tournament size (2 to 10)
         tournamentSpinner.setValueFactory(
                 new SpinnerValueFactory.IntegerSpinnerValueFactory(2, 10, 3, 1));
 
-        // Convergence generations (10-200)
+        // convergence window (10 to 200)
         convergenceGenSpinner.setValueFactory(
                 new SpinnerValueFactory.IntegerSpinnerValueFactory(10, 200, 50, 10));
     }
 
-    /**
-     * Sets up the history table.
-     */
+    // configure history table columns
     private void setupTable() {
         colDate.setCellValueFactory(cellData ->
                 Bindings.createStringBinding(() ->
@@ -125,11 +120,9 @@ public class AlgorithmController {
         historyTable.setItems(viewModel.getRunHistory());
     }
 
-    /**
-     * Sets up data bindings.
-     */
+    // wire labels, buttons and progress bar to view model properties
     private void setupBindings() {
-        // Data summary
+        // data summary
         viewModel.studentCountProperty().addListener((obs, oldVal, newVal) ->
                 studentCountLabel.setText(newVal.intValue() + " students"));
         viewModel.projectCountProperty().addListener((obs, oldVal, newVal) ->
@@ -138,13 +131,13 @@ public class AlgorithmController {
                 capacityLabel.setText("Capacity: " + viewModel.minRequiredProperty().get() +
                         "-" + newVal.intValue() + " slots"));
 
-        // Update data status
+        // recompute data status whenever the inputs change
         updateDataStatus();
         viewModel.studentCountProperty().addListener((obs, oldVal, newVal) -> updateDataStatus());
         viewModel.projectCountProperty().addListener((obs, oldVal, newVal) -> updateDataStatus());
         viewModel.totalCapacityProperty().addListener((obs, oldVal, newVal) -> updateDataStatus());
 
-        // Configuration spinners
+        // configuration spinners
         bindSpinnerToProperty(populationSpinner, viewModel.populationSizeProperty());
         bindSpinnerToProperty(generationsSpinner, viewModel.maxGenerationsProperty());
         bindDoubleSpinnerToProperty(mutationSpinner, viewModel.mutationRateProperty());
@@ -155,15 +148,15 @@ public class AlgorithmController {
 
         convergenceCheckbox.selectedProperty().bindBidirectional(viewModel.convergenceEnabledProperty());
 
-        // Bind convergenceGenSpinner disable to: running OR checkbox not selected
+        // disable convergence spinner when a run is active or the checkbox is off
         convergenceGenSpinner.disableProperty().bind(
                 viewModel.runningProperty().or(convergenceCheckbox.selectedProperty().not()));
 
-        // Execution state - bind buttons and config controls to running property
+        // run/stop buttons
         runButton.disableProperty().bind(viewModel.runningProperty());
         stopButton.disableProperty().bind(viewModel.runningProperty().not());
 
-        // Bind all config controls to running property
+        // disable config controls during a run
         populationSpinner.disableProperty().bind(viewModel.runningProperty());
         generationsSpinner.disableProperty().bind(viewModel.runningProperty());
         mutationSpinner.disableProperty().bind(viewModel.runningProperty());
@@ -172,7 +165,7 @@ public class AlgorithmController {
         tournamentSpinner.disableProperty().bind(viewModel.runningProperty());
         convergenceCheckbox.disableProperty().bind(viewModel.runningProperty());
 
-        // Progress
+        // live progress
         progressBar.progressProperty().bind(viewModel.progressProperty());
         viewModel.currentGenerationProperty().addListener((obs, oldVal, newVal) ->
                 generationLabel.setText("Generation: " + newVal.intValue() + " / " +
@@ -184,10 +177,9 @@ public class AlgorithmController {
         viewModel.elapsedTimeMsProperty().addListener((obs, oldVal, newVal) ->
                 timeLabel.setText("Time: " + AlgorithmViewModel.formatElapsedTime(newVal.longValue())));
 
-        // Status
         statusLabel.textProperty().bind(viewModel.statusMessageProperty());
 
-        // Initialize labels
+        // initial label values
         studentCountLabel.setText(viewModel.studentCountProperty().get() + " students");
         projectCountLabel.setText(viewModel.projectCountProperty().get() + " projects");
         capacityLabel.setText("Capacity: " + viewModel.minRequiredProperty().get() +
@@ -198,9 +190,7 @@ public class AlgorithmController {
         timeLabel.setText("Time: 0.0s");
     }
 
-    /**
-     * Updates the data status indicator.
-     */
+    // colour-coded ready/not-ready label
     private void updateDataStatus() {
         int students = viewModel.studentCountProperty().get();
         int projects = viewModel.projectCountProperty().get();
@@ -218,9 +208,7 @@ public class AlgorithmController {
         }
     }
 
-    /**
-     * Binds an integer spinner to an integer property.
-     */
+    // two-way binding for an integer spinner
     private void bindSpinnerToProperty(Spinner<Integer> spinner, javafx.beans.property.IntegerProperty property) {
         spinner.getValueFactory().valueProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal != null) {
@@ -232,9 +220,7 @@ public class AlgorithmController {
         spinner.getValueFactory().setValue(property.get());
     }
 
-    /**
-     * Binds a double spinner to a double property.
-     */
+    // two-way binding for a double spinner
     private void bindDoubleSpinnerToProperty(Spinner<Double> spinner, javafx.beans.property.DoubleProperty property) {
         spinner.getValueFactory().valueProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal != null) {
@@ -248,46 +234,55 @@ public class AlgorithmController {
 
     // ==================== Action Handlers ====================
 
+    // start a GA run
     @FXML
     public void runAlgorithm() {
         viewModel.runAlgorithm();
     }
 
+    // stop the running GA
     @FXML
     public void stopAlgorithm() {
         viewModel.stopAlgorithm();
     }
 
+    // apply small dataset preset
     @FXML
     public void applySmallPreset() {
         viewModel.applyPreset("small");
     }
 
+    // apply medium dataset preset
     @FXML
     public void applyMediumPreset() {
         viewModel.applyPreset("medium");
     }
 
+    // apply large dataset preset
     @FXML
     public void applyLargePreset() {
         viewModel.applyPreset("large");
     }
 
+    // apply quick test preset
     @FXML
     public void applyQuickPreset() {
         viewModel.applyPreset("quick");
     }
 
+    // apply high quality preset
     @FXML
     public void applyHighQualityPreset() {
         viewModel.applyPreset("highquality");
     }
 
+    // reload data and history
     @FXML
     public void refresh() {
         viewModel.refresh();
     }
 
+    // delete the selected past run after confirmation
     @FXML
     public void deleteSelectedRun() {
         AlgorithmRun selected = historyTable.getSelectionModel().getSelectedItem();

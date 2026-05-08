@@ -7,10 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Data Access Object for Student entities.
- * Provides CRUD operations for the students table.
- */
+// CRUD for the students table
 public class StudentDAO {
 
     private static final String INSERT_SQL =
@@ -28,13 +25,7 @@ public class StudentDAO {
     private static final String COUNT_SQL =
             "SELECT COUNT(*) FROM students";
 
-    /**
-     * Inserts a new student into the database.
-     *
-     * @param student the student to insert
-     * @return the generated ID for the new student
-     * @throws SQLException if a database error occurs
-     */
+    // insert and assign generated id back to the entity
     public int insert(Student student) throws SQLException {
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(INSERT_SQL, Statement.RETURN_GENERATED_KEYS)) {
@@ -62,13 +53,7 @@ public class StudentDAO {
         }
     }
 
-    /**
-     * Updates an existing student in the database.
-     *
-     * @param student the student to update
-     * @return true if the update was successful
-     * @throws SQLException if a database error occurs
-     */
+    // update by id, returns true on success
     public boolean update(Student student) throws SQLException {
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(UPDATE_SQL)) {
@@ -88,13 +73,7 @@ public class StudentDAO {
         }
     }
 
-    /**
-     * Deletes a student from the database.
-     *
-     * @param id the ID of the student to delete
-     * @return true if the deletion was successful
-     * @throws SQLException if a database error occurs
-     */
+    // delete by db id
     public boolean delete(int id) throws SQLException {
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(DELETE_SQL)) {
@@ -104,13 +83,7 @@ public class StudentDAO {
         }
     }
 
-    /**
-     * Finds a student by their database ID.
-     *
-     * @param id the database ID
-     * @return an Optional containing the student if found
-     * @throws SQLException if a database error occurs
-     */
+    // find by db id
     public Optional<Student> findById(int id) throws SQLException {
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(SELECT_BY_ID_SQL)) {
@@ -126,13 +99,7 @@ public class StudentDAO {
         return Optional.empty();
     }
 
-    /**
-     * Finds a student by their institutional student ID.
-     *
-     * @param studentId the institutional student ID
-     * @return an Optional containing the student if found
-     * @throws SQLException if a database error occurs
-     */
+    // find by institutional student id
     public Optional<Student> findByStudentId(String studentId) throws SQLException {
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(SELECT_BY_STUDENT_ID_SQL)) {
@@ -148,12 +115,7 @@ public class StudentDAO {
         return Optional.empty();
     }
 
-    /**
-     * Retrieves all students from the database.
-     *
-     * @return a list of all students
-     * @throws SQLException if a database error occurs
-     */
+    // load all students ordered by name
     public List<Student> findAll() throws SQLException {
         List<Student> students = new ArrayList<>();
 
@@ -168,12 +130,7 @@ public class StudentDAO {
         return students;
     }
 
-    /**
-     * Counts the total number of students in the database.
-     *
-     * @return the count of students
-     * @throws SQLException if a database error occurs
-     */
+    // total student count
     public int count() throws SQLException {
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(COUNT_SQL);
@@ -186,13 +143,7 @@ public class StudentDAO {
         return 0;
     }
 
-    /**
-     * Maps a ResultSet row to a Student object.
-     *
-     * @param rs the ResultSet positioned at a valid row
-     * @return a Student object
-     * @throws SQLException if a database error occurs
-     */
+    // row -> Student
     private Student mapResultSetToStudent(ResultSet rs) throws SQLException {
         Student student = new Student();
         student.setId(rs.getInt("id"));

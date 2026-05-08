@@ -13,10 +13,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Integration tests for the GeneticAlgorithm class.
- * Tests the full algorithm execution with realistic scenarios.
- */
+// integration tests for GeneticAlgorithm, full runs on realistic scenarios
 @DisplayName("GeneticAlgorithm Integration Tests")
 class GeneticAlgorithmIntegrationTest {
 

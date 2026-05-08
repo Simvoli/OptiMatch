@@ -13,22 +13,19 @@ import javafx.util.StringConverter;
 
 import java.io.File;
 
-/**
- * Controller for the Results display screen.
- */
+// FXML controller for the results screen
 public class ResultsController {
 
-    // Run selector
+    // run selector
     @FXML private ComboBox<AlgorithmRun> runSelector;
-    @FXML private Button deleteRunButton;
 
-    // Summary labels
+    // summary labels
     @FXML private Label totalStudentsLabel;
     @FXML private Label totalProjectsLabel;
     @FXML private Label bestFitnessLabel;
     @FXML private Label satisfactionLabel;
 
-    // Distribution labels
+    // preference distribution labels
     @FXML private Label firstChoiceLabel;
     @FXML private Label secondChoiceLabel;
     @FXML private Label thirdChoiceLabel;
@@ -36,7 +33,7 @@ public class ResultsController {
     @FXML private Label fifthChoiceLabel;
     @FXML private Label unmatchedLabel;
 
-    // Student assignments table
+    // student assignments table
     @FXML private TableView<StudentAssignmentDetail> studentTable;
     @FXML private TableColumn<StudentAssignmentDetail, String> colStudentId;
     @FXML private TableColumn<StudentAssignmentDetail, String> colStudentName;
@@ -44,7 +41,7 @@ public class ResultsController {
     @FXML private TableColumn<StudentAssignmentDetail, String> colPreferenceRank;
     @FXML private TableColumn<StudentAssignmentDetail, Integer> colSatisfaction;
 
-    // Project assignments table
+    // project assignments table
     @FXML private TableView<ProjectAssignmentDetail> projectTable;
     @FXML private TableColumn<ProjectAssignmentDetail, String> colProjectCode;
     @FXML private TableColumn<ProjectAssignmentDetail, String> colProjectName;
@@ -52,7 +49,7 @@ public class ResultsController {
     @FXML private TableColumn<ProjectAssignmentDetail, Integer> colAssignedCount;
     @FXML private TableColumn<ProjectAssignmentDetail, String> colStatus;
 
-    // Generations table
+    // generations table
     @FXML private TableView<GenerationStats> generationsTable;
     @FXML private TableColumn<GenerationStats, Integer> colGeneration;
     @FXML private TableColumn<GenerationStats, Double> colGenBestFitness;
@@ -62,11 +59,12 @@ public class ResultsController {
     @FXML private TableColumn<GenerationStats, Integer> colGenValidCount;
     @FXML private TableColumn<GenerationStats, Double> colGenBestEver;
 
-    // Status
+    // status bar
     @FXML private Label statusLabel;
 
     private ResultsViewModel viewModel;
 
+    // FXML init
     @FXML
     public void initialize() {
         viewModel = new ResultsViewModel();
@@ -78,9 +76,7 @@ public class ResultsController {
         setupBindings();
     }
 
-    /**
-     * Sets up the run selector combo box.
-     */
+    // configure the run dropdown
     private void setupRunSelector() {
         runSelector.setItems(viewModel.getAvailableRuns());
         runSelector.setConverter(new StringConverter<>() {
@@ -98,9 +94,7 @@ public class ResultsController {
         runSelector.valueProperty().bindBidirectional(viewModel.selectedRunProperty());
     }
 
-    /**
-     * Sets up the student assignments table.
-     */
+    // configure the student assignments table
     private void setupStudentTable() {
         colStudentId.setCellValueFactory(cellData ->
                 Bindings.createStringBinding(() -> cellData.getValue().getStudent().getStudentId()));
@@ -144,9 +138,7 @@ public class ResultsController {
         studentTable.setItems(viewModel.getStudentAssignments());
     }
 
-    /**
-     * Sets up the project assignments table.
-     */
+    // configure the project assignments table
     private void setupProjectTable() {
         colProjectCode.setCellValueFactory(cellData ->
                 Bindings.createStringBinding(() -> cellData.getValue().getProject().getCode()));
@@ -195,9 +187,7 @@ public class ResultsController {
         projectTable.setItems(viewModel.getProjectAssignments());
     }
 
-    /**
-     * Sets up the generations statistics table.
-     */
+    // configure the per-generation stats table
     private void setupGenerationsTable() {
         colGeneration.setCellValueFactory(cellData ->
                 Bindings.createObjectBinding(() -> cellData.getValue().getGeneration()));
@@ -280,11 +270,9 @@ public class ResultsController {
         generationsTable.setItems(viewModel.getGenerationStats());
     }
 
-    /**
-     * Sets up data bindings.
-     */
+    // wire labels to view model properties
     private void setupBindings() {
-        // Summary labels
+        // summary labels
         viewModel.totalStudentsProperty().addListener((obs, oldVal, newVal) ->
                 totalStudentsLabel.setText(newVal.intValue() + " students"));
         viewModel.totalProjectsProperty().addListener((obs, oldVal, newVal) ->
@@ -294,7 +282,7 @@ public class ResultsController {
         viewModel.satisfactionRateProperty().addListener((obs, oldVal, newVal) ->
                 satisfactionLabel.setText(String.format("%.1f%%", newVal.doubleValue())));
 
-        // Distribution labels
+        // preference distribution labels
         viewModel.firstChoiceCountProperty().addListener((obs, oldVal, newVal) ->
                 firstChoiceLabel.setText(newVal.toString()));
         viewModel.secondChoiceCountProperty().addListener((obs, oldVal, newVal) ->
@@ -308,10 +296,9 @@ public class ResultsController {
         viewModel.unmatchedCountProperty().addListener((obs, oldVal, newVal) ->
                 unmatchedLabel.setText(newVal.toString()));
 
-        // Status
         statusLabel.textProperty().bind(viewModel.statusMessageProperty());
 
-        // Initialize labels
+        // initial label values
         totalStudentsLabel.setText(viewModel.totalStudentsProperty().get() + " students");
         totalProjectsLabel.setText(viewModel.totalProjectsProperty().get() + " projects");
         bestFitnessLabel.setText(String.format("%.2f", viewModel.bestFitnessProperty().get()));
@@ -326,11 +313,13 @@ public class ResultsController {
 
     // ==================== Action Handlers ====================
 
+    // reload runs
     @FXML
     public void refresh() {
         viewModel.refresh();
     }
 
+    // delete the selected run after confirmation
     @FXML
     public void deleteRun() {
         if (viewModel.selectedRunProperty().get() == null) {
@@ -347,6 +336,7 @@ public class ResultsController {
         }
     }
 
+    // export students to CSV
     @FXML
     public void exportStudentsCsv() {
         FileChooser fileChooser = new FileChooser();
@@ -361,6 +351,7 @@ public class ResultsController {
         }
     }
 
+    // export projects to CSV
     @FXML
     public void exportProjectsCsv() {
         FileChooser fileChooser = new FileChooser();
@@ -375,6 +366,7 @@ public class ResultsController {
         }
     }
 
+    // export the full text report
     @FXML
     public void exportFullReport() {
         FileChooser fileChooser = new FileChooser();
@@ -389,6 +381,7 @@ public class ResultsController {
         }
     }
 
+    // export per-generation stats to CSV
     @FXML
     public void exportGenerationsCsv() {
         FileChooser fileChooser = new FileChooser();

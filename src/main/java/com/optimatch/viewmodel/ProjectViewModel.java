@@ -8,22 +8,19 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 
-/**
- * ViewModel for the Project management screen.
- * Handles data binding and business logic for the UI.
- */
+// view model for the projects screen: form fields, search, save, delete
 public class ProjectViewModel {
 
     private final ProjectService projectService;
 
-    // Observable collections
+    // observable data
     private final ObservableList<Project> projects = FXCollections.observableArrayList();
     private final FilteredList<Project> filteredProjects = new FilteredList<>(projects, p -> true);
 
-    // Selected project
+    // selected project in the table
     private final ObjectProperty<Project> selectedProject = new SimpleObjectProperty<>();
 
-    // Form fields
+    // form fields
     private final StringProperty code = new SimpleStringProperty("");
     private final StringProperty name = new SimpleStringProperty("");
     private final StringProperty description = new SimpleStringProperty("");
@@ -31,36 +28,25 @@ public class ProjectViewModel {
     private final IntegerProperty maxCapacity = new SimpleIntegerProperty(10);
     private final DoubleProperty requiredGpa = new SimpleDoubleProperty(0.0);
 
-    // Search/filter
+    // search box text
     private final StringProperty searchText = new SimpleStringProperty("");
 
-    // Status message
+    // status bar message
     private final StringProperty statusMessage = new SimpleStringProperty("");
 
-    // Edit mode
+    // edit vs create flag, plus id of the project being edited
     private final BooleanProperty editMode = new SimpleBooleanProperty(false);
     private int editingProjectId = -1;
 
-    // Statistics
+    // running totals for capacity labels
     private final IntegerProperty totalCapacity = new SimpleIntegerProperty(0);
     private final IntegerProperty totalMinRequired = new SimpleIntegerProperty(0);
 
-    /**
-     * Creates a ProjectViewModel with default service.
-     */
+    // wires up service and search filter, then loads data
     public ProjectViewModel() {
-        this(new ProjectService());
-    }
+        this.projectService = new ProjectService();
 
-    /**
-     * Creates a ProjectViewModel with the specified service.
-     *
-     * @param projectService the project service
-     */
-    public ProjectViewModel(ProjectService projectService) {
-        this.projectService = projectService;
-
-        // Set up search filter
+        // search filter: code, name or description
         searchText.addListener((obs, oldVal, newVal) -> {
             filteredProjects.setPredicate(project -> {
                 if (newVal == null || newVal.isEmpty()) {
@@ -74,13 +60,10 @@ public class ProjectViewModel {
             });
         });
 
-        // Load initial data
         refresh();
     }
 
-    /**
-     * Refreshes data from the database.
-     */
+    // reload projects from db and update totals
     public void refresh() {
         try {
             projects.setAll(projectService.getAllProjects());
@@ -91,9 +74,7 @@ public class ProjectViewModel {
         }
     }
 
-    /**
-     * Updates capacity statistics.
-     */
+    // recompute total min/max capacity across all projects
     private void updateStatistics() {
         int totalMax = projects.stream().mapToInt(Project::getMaxCapacity).sum();
         int totalMin = projects.stream().mapToInt(Project::getMinCapacity).sum();
@@ -101,9 +82,7 @@ public class ProjectViewModel {
         totalMinRequired.set(totalMin);
     }
 
-    /**
-     * Clears the form fields.
-     */
+    // wipe form and exit edit mode
     public void clearForm() {
         code.set("");
         name.set("");
@@ -116,11 +95,7 @@ public class ProjectViewModel {
         selectedProject.set(null);
     }
 
-    /**
-     * Loads the selected project's data into the form.
-     *
-     * @param project the project to edit
-     */
+    // populate form from a chosen project
     public void loadProjectToForm(Project project) {
         if (project == null) {
             clearForm();
@@ -139,14 +114,9 @@ public class ProjectViewModel {
         selectedProject.set(project);
     }
 
-    /**
-     * Saves the current form data (create or update).
-     *
-     * @return true if save was successful
-     */
+    // save form (create or update), returns true on success
     public boolean save() {
         try {
-            // Validate
             if (code.get().trim().isEmpty()) {
                 statusMessage.set("Project code is required");
                 return false;
@@ -181,12 +151,10 @@ public class ProjectViewModel {
             project.setRequiredGpa(requiredGpa.get());
 
             if (editMode.get()) {
-                // Update existing
                 project.setId(editingProjectId);
                 projectService.updateProject(project);
                 statusMessage.set("Project updated successfully");
             } else {
-                // Create new
                 projectService.createProject(project);
                 statusMessage.set("Project created successfully");
             }
@@ -201,11 +169,7 @@ public class ProjectViewModel {
         }
     }
 
-    /**
-     * Deletes the currently selected project.
-     *
-     * @return true if deletion was successful
-     */
+    // delete the currently selected project
     public boolean deleteSelected() {
         if (selectedProject.get() == null) {
             statusMessage.set("No project selected");
@@ -226,58 +190,67 @@ public class ProjectViewModel {
 
     // ==================== Property Getters ====================
 
+    // raw project list
     public ObservableList<Project> getProjects() {
         return projects;
     }
 
+    // filtered project list (drives the table)
     public FilteredList<Project> getFilteredProjects() {
         return filteredProjects;
     }
 
-    public ObjectProperty<Project> selectedProjectProperty() {
-        return selectedProject;
-    }
-
+    // code field
     public StringProperty codeProperty() {
         return code;
     }
 
+    // name field
     public StringProperty nameProperty() {
         return name;
     }
 
+    // description field
     public StringProperty descriptionProperty() {
         return description;
     }
 
+    // min capacity field
     public IntegerProperty minCapacityProperty() {
         return minCapacity;
     }
 
+    // max capacity field
     public IntegerProperty maxCapacityProperty() {
         return maxCapacity;
     }
 
+    // required gpa field
     public DoubleProperty requiredGpaProperty() {
         return requiredGpa;
     }
 
+    // search text
     public StringProperty searchTextProperty() {
         return searchText;
     }
 
+    // status message
     public StringProperty statusMessageProperty() {
         return statusMessage;
     }
 
+    // edit vs create flag
     public BooleanProperty editModeProperty() {
         return editMode;
     }
 
+    // total of max capacities across all projects
     public IntegerProperty totalCapacityProperty() {
         return totalCapacity;
     }
 
+    // total of min capacities across all projects
     public IntegerProperty totalMinRequiredProperty() {
         return totalMinRequired;
     }

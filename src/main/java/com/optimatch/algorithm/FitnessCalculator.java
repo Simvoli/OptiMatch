@@ -8,17 +8,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Calculates the fitness score for chromosomes in the genetic algorithm.
- *
- * Fitness Formula:
- * Fitness = Σ(preferenceWeight[i]) - penaltyCapacity - penaltyGPA - penaltyPairs
- *
- * Higher fitness = better solution.
- */
+// fitness = sum of preference weights minus penalties for capacity, gpa and split partners
+// higher is better
 public class FitnessCalculator {
 
-    // Penalty weights (configurable)
+    // default penalty weights, can be overwritten in tests
     private static final double DEFAULT_CAPACITY_PENALTY = 50.0;
     private static final double DEFAULT_GPA_PENALTY = 30.0;
     private static final double DEFAULT_PARTNER_PENALTY = 40.0;
@@ -26,7 +20,8 @@ public class FitnessCalculator {
     private final List<Student> students;
     private final List<Project> projects;
     private final Map<Integer, Project> projectMap;
-    private final Map<Integer, Map<Integer, Integer>> preferenceMap; // studentId -> (projectId -> rank)
+    // studentId -> (projectId -> rank)
+    private final Map<Integer, Map<Integer, Integer>> preferenceMap;
     private final Map<Integer, Integer> studentIndexToId;
     private final Map<Integer, Integer> studentIdToIndex;
 
@@ -34,13 +29,7 @@ public class FitnessCalculator {
     private double gpaPenaltyWeight;
     private double partnerPenaltyWeight;
 
-    /**
-     * Creates a new FitnessCalculator with the given data.
-     *
-     * @param students    list of all students
-     * @param projects    list of all projects
-     * @param preferences list of all preferences
-     */
+    // build all lookup maps once so per-chromosome fitness stays cheap
     public FitnessCalculator(List<Student> students, List<Project> projects, List<Preference> preferences) {
         this.students = students;
         this.projects = projects;
@@ -48,13 +37,13 @@ public class FitnessCalculator {
         this.gpaPenaltyWeight = DEFAULT_GPA_PENALTY;
         this.partnerPenaltyWeight = DEFAULT_PARTNER_PENALTY;
 
-        // Build project lookup map
+        // project id -> project
         this.projectMap = new HashMap<>();
         for (Project project : projects) {
             projectMap.put(project.getId(), project);
         }
 
-        // Build student index mappings
+        // chromosome index <-> student id
         this.studentIndexToId = new HashMap<>();
         this.studentIdToIndex = new HashMap<>();
         for (int i = 0; i < students.size(); i++) {
@@ -63,7 +52,7 @@ public class FitnessCalculator {
             studentIdToIndex.put(studentId, i);
         }
 
-        // Build preference lookup: studentId -> (projectId -> rank)
+        // student id -> (project id -> rank)
         this.preferenceMap = new HashMap<>();
         for (Preference pref : preferences) {
             preferenceMap
@@ -72,13 +61,7 @@ public class FitnessCalculator {
         }
     }
 
-    /**
-     * Calculates the fitness score for a chromosome.
-     * Higher fitness = better solution.
-     *
-     * @param chromosome the chromosome to evaluate
-     * @return the fitness score
-     */
+    // total fitness for a chromosome, also caches the value on the chromosome itself
     public double calculateFitness(Chromosome chromosome) {
         double preferenceScore = calculatePreferenceScore(chromosome);
         double capacityPenalty = calculateCapacityPenalty(chromosome);
@@ -91,13 +74,7 @@ public class FitnessCalculator {
         return fitness;
     }
 
-    /**
-     * Calculates the total preference satisfaction score.
-     * Sum of weights based on how well students got their preferred choices.
-     *
-     * @param chromosome the chromosome to evaluate
-     * @return the preference score (positive)
-     */
+    // sum of preference weights, no preference contributes 0
     public double calculatePreferenceScore(Chromosome chromosome) {
         double score = 0.0;
 
@@ -110,33 +87,23 @@ public class FitnessCalculator {
                 int rank = studentPrefs.get(projectId);
                 score += Preference.getWeightForRank(rank);
             }
-            // If project not in preferences, adds 0 (WEIGHT_NO_PREFERENCE)
         }
 
         return score;
     }
 
-    /**
-     * Calculates the capacity violation penalty.
-     * Penalty = 50 * |actual - limit| for each project exceeding min/max.
-     *
-     * @param chromosome the chromosome to evaluate
-     * @return the capacity penalty (positive value to be subtracted)
-     */
+    // penalty for projects under min or over max capacity
     public double calculateCapacityPenalty(Chromosome chromosome) {
         double penalty = 0.0;
 
-        // Count students per project
         Map<Integer, Integer> projectCounts = countStudentsPerProject(chromosome);
 
         for (Project project : projects) {
             int count = projectCounts.getOrDefault(project.getId(), 0);
 
             if (count < project.getMinCapacity()) {
-                // Under minimum capacity
                 penalty += capacityPenaltyWeight * (project.getMinCapacity() - count);
             } else if (count > project.getMaxCapacity()) {
-                // Over maximum capacity
                 penalty += capacityPenaltyWeight * (count - project.getMaxCapacity());
             }
         }
@@ -144,13 +111,7 @@ public class FitnessCalculator {
         return penalty;
     }
 
-    /**
-     * Calculates the GPA requirement violation penalty.
-     * Penalty = 30 * count of students below required GPA.
-     *
-     * @param chromosome the chromosome to evaluate
-     * @return the GPA penalty (positive value to be subtracted)
-     */
+    // penalty for students assigned to projects above their gpa
     public double calculateGpaPenalty(Chromosome chromosome) {
         double penalty = 0.0;
 
@@ -167,14 +128,7 @@ public class FitnessCalculator {
         return penalty;
     }
 
-    /**
-     * Calculates the partner separation penalty.
-     * Penalty = 40 * count of separated partner pairs.
-     * Note: Each separated pair is counted once (not twice).
-     *
-     * @param chromosome the chromosome to evaluate
-     * @return the partner penalty (positive value to be subtracted)
-     */
+    // penalty for partner pairs assigned to different projects
     public double calculatePartnerPenalty(Chromosome chromosome) {
         double penalty = 0.0;
 
@@ -184,7 +138,8 @@ public class FitnessCalculator {
             if (student.hasPartner()) {
                 Integer partnerIndex = studentIdToIndex.get(student.getPartnerId());
 
-                // Only count if partner exists and has higher index (to avoid double counting)
+                // RU: учитываем пару только когда смотрим со стороны меньшего индекса,
+                // иначе одна и та же пара даст штраф дважды
                 if (partnerIndex != null && partnerIndex > i) {
                     int studentProject = chromosome.getAssignment(i);
                     int partnerProject = chromosome.getAssignment(partnerIndex);
@@ -199,12 +154,7 @@ public class FitnessCalculator {
         return penalty;
     }
 
-    /**
-     * Counts students assigned to each project.
-     *
-     * @param chromosome the chromosome
-     * @return map of projectId to student count
-     */
+    // helper: project id -> assigned student count
     private Map<Integer, Integer> countStudentsPerProject(Chromosome chromosome) {
         Map<Integer, Integer> counts = new HashMap<>();
         for (int i = 0; i < chromosome.getLength(); i++) {
@@ -214,16 +164,12 @@ public class FitnessCalculator {
         return counts;
     }
 
+    // number of students seen by the calculator
     public int getStudentCount() {
         return students.size();
     }
 
-    /**
-     * Gets a detailed breakdown of fitness components for a chromosome.
-     *
-     * @param chromosome the chromosome to analyze
-     * @return a FitnessBreakdown with all component scores
-     */
+    // detailed fitness breakdown for inspection
     public FitnessBreakdown getBreakdown(Chromosome chromosome) {
         double preferenceScore = calculatePreferenceScore(chromosome);
         double capacityPenalty = calculateCapacityPenalty(chromosome);
@@ -240,14 +186,9 @@ public class FitnessCalculator {
         );
     }
 
-    /**
-     * Counts how many students got each preference rank.
-     *
-     * @param chromosome the chromosome to analyze
-     * @return array where index 0 = unassigned preferences, 1-5 = rank counts
-     */
+    // counts per rank: index 0 = no preference, 1..5 = ranks
     public int[] countPreferenceDistribution(Chromosome chromosome) {
-        int[] distribution = new int[6]; // 0 = no preference, 1-5 = ranks
+        int[] distribution = new int[6];
 
         for (int i = 0; i < chromosome.getLength(); i++) {
             int studentId = studentIndexToId.get(i);
@@ -269,9 +210,7 @@ public class FitnessCalculator {
         return distribution;
     }
 
-    /**
-     * Holds a detailed breakdown of fitness components.
-     */
+    // breakdown of fitness components, useful for debugging and tests
     public static class FitnessBreakdown {
         private final double preferenceScore;
         private final double capacityPenalty;
@@ -288,22 +227,27 @@ public class FitnessCalculator {
             this.totalFitness = totalFitness;
         }
 
+        // raw preference sum
         public double getPreferenceScore() {
             return preferenceScore;
         }
 
+        // capacity penalty contribution
         public double getCapacityPenalty() {
             return capacityPenalty;
         }
 
+        // gpa penalty contribution
         public double getGpaPenalty() {
             return gpaPenalty;
         }
 
+        // partner penalty contribution
         public double getPartnerPenalty() {
             return partnerPenalty;
         }
 
+        // final fitness value
         public double getTotalFitness() {
             return totalFitness;
         }

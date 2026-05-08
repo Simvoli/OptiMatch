@@ -2,10 +2,7 @@ package com.optimatch.model;
 
 import java.util.Objects;
 
-/**
- * Represents a student in the OptiMatch system.
- * Each student has preferences for projects and may have a partner.
- */
+// student record: id, name, email, gpa, optional partner
 public class Student {
 
     private int id;
@@ -15,22 +12,11 @@ public class Student {
     private double gpa;
     private Integer partnerId;
 
-    /**
-     * Default constructor for Student.
-     */
+    // empty student, fields filled by setters
     public Student() {
     }
 
-    /**
-     * Creates a new Student with the specified details.
-     *
-     * @param id        the database ID
-     * @param studentId the student's institutional ID
-     * @param name      the student's full name
-     * @param email     the student's email address
-     * @param gpa       the student's GPA (0.00 to 4.00)
-     * @param partnerId the ID of the student's partner, or null if none
-     */
+    // full student
     public Student(int id, String studentId, String name, String email, double gpa, Integer partnerId) {
         this.id = id;
         this.studentId = studentId;
@@ -40,93 +26,52 @@ public class Student {
         this.partnerId = partnerId;
     }
 
-    /**
-     * Gets the database ID.
-     *
-     * @return the database ID
-     */
+    // db id
     public int getId() {
         return id;
     }
 
-    /**
-     * Sets the database ID.
-     *
-     * @param id the database ID
-     */
+    // set db id
     public void setId(int id) {
         this.id = id;
     }
 
-    /**
-     * Gets the student's institutional ID.
-     *
-     * @return the student ID
-     */
+    // institutional student id
     public String getStudentId() {
         return studentId;
     }
 
-    /**
-     * Sets the student's institutional ID.
-     *
-     * @param studentId the student ID
-     */
+    // set institutional student id
     public void setStudentId(String studentId) {
         this.studentId = studentId;
     }
 
-    /**
-     * Gets the student's name.
-     *
-     * @return the name
-     */
+    // full name
     public String getName() {
         return name;
     }
 
-    /**
-     * Sets the student's name.
-     *
-     * @param name the name
-     */
+    // set full name
     public void setName(String name) {
         this.name = name;
     }
 
-    /**
-     * Gets the student's email address.
-     *
-     * @return the email
-     */
+    // email or null
     public String getEmail() {
         return email;
     }
 
-    /**
-     * Sets the student's email address.
-     *
-     * @param email the email
-     */
+    // set email
     public void setEmail(String email) {
         this.email = email;
     }
 
-    /**
-     * Gets the student's GPA.
-     *
-     * @return the GPA
-     */
+    // current gpa
     public double getGpa() {
         return gpa;
     }
 
-    /**
-     * Sets the student's GPA.
-     *
-     * @param gpa the GPA (must be between 0.00 and 4.00)
-     * @throws IllegalArgumentException if outside [0.0, 4.0]
-     */
+    // set gpa, must be in [0, 4]
     public void setGpa(double gpa) {
         if (gpa < 0.0 || gpa > 4.0) {
             throw new IllegalArgumentException("GPA must be between 0.0 and 4.0: " + gpa);
@@ -134,29 +79,17 @@ public class Student {
         this.gpa = gpa;
     }
 
-    /**
-     * Gets the partner's database ID.
-     *
-     * @return the partner ID, or null if no partner
-     */
+    // partner id or null
     public Integer getPartnerId() {
         return partnerId;
     }
 
-    /**
-     * Sets the partner's database ID.
-     *
-     * @param partnerId the partner ID, or null if no partner
-     */
+    // set partner id (null clears it)
     public void setPartnerId(Integer partnerId) {
         this.partnerId = partnerId;
     }
 
-    /**
-     * Checks if the student has a partner.
-     *
-     * @return true if the student has a partner
-     */
+    // true if this student has a partner
     public boolean hasPartner() {
         return partnerId != null;
     }

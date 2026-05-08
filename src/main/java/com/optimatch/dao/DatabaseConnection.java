@@ -9,19 +9,10 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- * Manages database connections for the OptiMatch application.
- *
- * Each call to {@link #getConnection()} returns a fresh JDBC connection;
- * callers are expected to wrap usage in try-with-resources so the
- * connection is closed deterministically. This avoids the previous
- * "shared singleton + try-with-resources" hazard where one DAO call
- * would silently close the connection used by other threads.
- *
- * Configuration is loaded once from {@code config.properties} (located
- * on the classpath) on first use; {@link #configure(String, String, String)}
- * can override settings programmatically (useful for tests).
- */
+// connection factory
+// RU: каждый getConnection() отдаёт НОВОЕ соединение, владелец обязан закрыть его сам
+// (try-with-resources). Раньше был общий singleton, и при закрытии в одном DAO
+// другие потоки внезапно теряли коннект
 public final class DatabaseConnection {
 
     private static final Logger LOGGER = Logger.getLogger(DatabaseConnection.class.getName());
@@ -36,13 +27,11 @@ public final class DatabaseConnection {
     private static String password;
     private static volatile boolean initialized = false;
 
+    // utility class, no instances
     private DatabaseConnection() {
     }
 
-    /**
-     * Initializes configuration from {@code config.properties}.
-     * Idempotent and thread-safe.
-     */
+    // load config.properties once, fall back to defaults if missing
     private static synchronized void initialize() {
         if (initialized) {
             return;
@@ -71,46 +60,13 @@ public final class DatabaseConnection {
         initialized = true;
     }
 
-    /**
-     * Configures the database connection parameters manually.
-     * Overrides settings from {@code config.properties}.
-     *
-     * @param dbUrl      the database URL
-     * @param dbUser     the database username
-     * @param dbPassword the database password
-     */
-    public static synchronized void configure(String dbUrl, String dbUser, String dbPassword) {
-        url = dbUrl;
-        user = dbUser;
-        password = dbPassword;
-        initialized = true;
-    }
-
-    /**
-     * Returns a fresh JDBC connection. The caller must close it,
-     * preferably via try-with-resources.
-     *
-     * @return a new database connection
-     * @throws SQLException if a connection cannot be established
-     */
+    // open a fresh JDBC connection (caller closes it)
     public static Connection getConnection() throws SQLException {
         initialize();
         return DriverManager.getConnection(url, user, password);
     }
 
-    /**
-     * No-op kept for backwards compatibility.
-     * Connections are now per-call and closed by their owners.
-     */
-    public static void closeConnection() {
-        // intentionally empty: connections are owned by the caller
-    }
-
-    /**
-     * Tests the database connection.
-     *
-     * @return true if a connection can be established and closed cleanly
-     */
+    // probe the database, returns false if anything goes wrong
     public static boolean testConnection() {
         try (Connection conn = getConnection()) {
             return conn != null && !conn.isClosed();

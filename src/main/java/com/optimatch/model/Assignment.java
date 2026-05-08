@@ -2,10 +2,7 @@ package com.optimatch.model;
 
 import java.util.Objects;
 
-/**
- * Represents a final assignment of a student to a project.
- * Assignments are the result of running the genetic algorithm.
- */
+// final student-to-project assignment, the output of one GA run
 public class Assignment {
 
     private int id;
@@ -14,21 +11,11 @@ public class Assignment {
     private int projectId;
     private Integer preferenceRank;
 
-    /**
-     * Default constructor for Assignment.
-     */
+    // empty assignment
     public Assignment() {
     }
 
-    /**
-     * Creates a new Assignment with the specified details.
-     *
-     * @param id             the database ID
-     * @param runId          the algorithm run ID
-     * @param studentId      the student's database ID
-     * @param projectId      the project's database ID
-     * @param preferenceRank the rank of this project in student's preferences, or null if not in preferences
-     */
+    // full assignment
     public Assignment(int id, int runId, int studentId, int projectId, Integer preferenceRank) {
         this.id = id;
         this.runId = runId;
@@ -37,14 +24,7 @@ public class Assignment {
         this.preferenceRank = preferenceRank;
     }
 
-    /**
-     * Creates a new Assignment without a database ID.
-     *
-     * @param runId          the algorithm run ID
-     * @param studentId      the student's database ID
-     * @param projectId      the project's database ID
-     * @param preferenceRank the rank of this project in student's preferences, or null if not in preferences
-     */
+    // assignment without db id
     public Assignment(int runId, int studentId, int projectId, Integer preferenceRank) {
         this.runId = runId;
         this.studentId = studentId;
@@ -52,110 +32,62 @@ public class Assignment {
         this.preferenceRank = preferenceRank;
     }
 
-    /**
-     * Gets the database ID.
-     *
-     * @return the database ID
-     */
+    // db id
     public int getId() {
         return id;
     }
 
-    /**
-     * Sets the database ID.
-     *
-     * @param id the database ID
-     */
+    // set db id
     public void setId(int id) {
         this.id = id;
     }
 
-    /**
-     * Gets the algorithm run ID.
-     *
-     * @return the run ID
-     */
+    // owning run id
     public int getRunId() {
         return runId;
     }
 
-    /**
-     * Sets the algorithm run ID.
-     *
-     * @param runId the run ID
-     */
+    // set owning run id
     public void setRunId(int runId) {
         this.runId = runId;
     }
 
-    /**
-     * Gets the student's database ID.
-     *
-     * @return the student ID
-     */
+    // student id
     public int getStudentId() {
         return studentId;
     }
 
-    /**
-     * Sets the student's database ID.
-     *
-     * @param studentId the student ID
-     */
+    // set student id
     public void setStudentId(int studentId) {
         this.studentId = studentId;
     }
 
-    /**
-     * Gets the project's database ID.
-     *
-     * @return the project ID
-     */
+    // assigned project id
     public int getProjectId() {
         return projectId;
     }
 
-    /**
-     * Sets the project's database ID.
-     *
-     * @param projectId the project ID
-     */
+    // set assigned project id
     public void setProjectId(int projectId) {
         this.projectId = projectId;
     }
 
-    /**
-     * Gets the preference rank.
-     *
-     * @return the rank if this project was in student's preferences, null otherwise
-     */
+    // rank of the assigned project in the student's preferences (null if not in list)
     public Integer getPreferenceRank() {
         return preferenceRank;
     }
 
-    /**
-     * Sets the preference rank.
-     *
-     * @param preferenceRank the rank, or null if not in preferences
-     */
+    // set preference rank
     public void setPreferenceRank(Integer preferenceRank) {
         this.preferenceRank = preferenceRank;
     }
 
-    /**
-     * Checks if this assignment was in the student's preferences.
-     *
-     * @return true if the assigned project was in the student's preference list
-     */
+    // true if the assigned project was on the student's preference list
     public boolean wasInPreferences() {
         return preferenceRank != null;
     }
 
-    /**
-     * Gets the satisfaction score for this assignment.
-     *
-     * @return the weight value based on preference rank
-     */
+    // satisfaction score for this assignment (uses Preference weights)
     public int getSatisfactionScore() {
         if (preferenceRank == null) {
             return Preference.WEIGHT_NO_PREFERENCE;

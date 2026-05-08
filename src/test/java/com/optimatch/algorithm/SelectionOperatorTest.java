@@ -54,7 +54,7 @@ class SelectionOperatorTest {
             }
             double avgFitness = totalFitness / selections;
 
-            // Population avg is 45 — tournament size 5 should consistently exceed it
+            // population avg is 45, tournament size 5 should consistently exceed it
             assertTrue(avgFitness > 50);
         }
 

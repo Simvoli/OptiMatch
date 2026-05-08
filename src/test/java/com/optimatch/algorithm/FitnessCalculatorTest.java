@@ -14,9 +14,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Unit tests for the FitnessCalculator class.
- */
+// unit tests for FitnessCalculator
 @DisplayName("FitnessCalculator Tests")
 class FitnessCalculatorTest {
 

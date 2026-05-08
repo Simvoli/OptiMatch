@@ -2,15 +2,10 @@ package com.optimatch.model;
 
 import java.util.Objects;
 
-/**
- * Represents a student's preference for a project.
- * Each preference has a rank (1 = first choice, 2 = second choice, etc.)
- */
+// one (student, project, rank) tuple, where rank 1 = top choice
 public class Preference {
 
-    /**
-     * Weight constants for preference ranks used in fitness calculation.
-     */
+    // weight per rank used by the fitness function
     public static final int WEIGHT_FIRST_CHOICE = 100;
     public static final int WEIGHT_SECOND_CHOICE = 80;
     public static final int WEIGHT_THIRD_CHOICE = 60;
@@ -23,20 +18,11 @@ public class Preference {
     private int projectId;
     private int rank;
 
-    /**
-     * Default constructor for Preference.
-     */
+    // empty preference
     public Preference() {
     }
 
-    /**
-     * Creates a new Preference with the specified details.
-     *
-     * @param id        the database ID
-     * @param studentId the student's database ID
-     * @param projectId the project's database ID
-     * @param rank      the preference rank (1 = first choice)
-     */
+    // preference loaded from db
     public Preference(int id, int studentId, int projectId, int rank) {
         this.id = id;
         this.studentId = studentId;
@@ -44,107 +30,59 @@ public class Preference {
         this.rank = rank;
     }
 
-    /**
-     * Creates a new Preference without a database ID.
-     *
-     * @param studentId the student's database ID
-     * @param projectId the project's database ID
-     * @param rank      the preference rank (1 = first choice)
-     */
+    // new preference, no db id yet
     public Preference(int studentId, int projectId, int rank) {
         this.studentId = studentId;
         this.projectId = projectId;
         this.rank = rank;
     }
 
-    /**
-     * Gets the database ID.
-     *
-     * @return the database ID
-     */
+    // db id
     public int getId() {
         return id;
     }
 
-    /**
-     * Sets the database ID.
-     *
-     * @param id the database ID
-     */
+    // set db id
     public void setId(int id) {
         this.id = id;
     }
 
-    /**
-     * Gets the student's database ID.
-     *
-     * @return the student ID
-     */
+    // student id
     public int getStudentId() {
         return studentId;
     }
 
-    /**
-     * Sets the student's database ID.
-     *
-     * @param studentId the student ID
-     */
+    // set student id
     public void setStudentId(int studentId) {
         this.studentId = studentId;
     }
 
-    /**
-     * Gets the project's database ID.
-     *
-     * @return the project ID
-     */
+    // project id
     public int getProjectId() {
         return projectId;
     }
 
-    /**
-     * Sets the project's database ID.
-     *
-     * @param projectId the project ID
-     */
+    // set project id
     public void setProjectId(int projectId) {
         this.projectId = projectId;
     }
 
-    /**
-     * Gets the preference rank.
-     *
-     * @return the rank (1 = first choice)
-     */
+    // rank (1 is best)
     public int getRank() {
         return rank;
     }
 
-    /**
-     * Sets the preference rank.
-     *
-     * @param rank the rank (1 = first choice)
-     */
+    // set rank
     public void setRank(int rank) {
         this.rank = rank;
     }
 
-    /**
-     * Gets the weight for this preference based on its rank.
-     * Used in fitness calculation.
-     *
-     * @return the weight value for this preference rank
-     */
+    // weight of this preference
     public int getWeight() {
         return getWeightForRank(this.rank);
     }
 
-    /**
-     * Gets the weight for a given preference rank.
-     *
-     * @param rank the preference rank
-     * @return the weight value
-     */
+    // weight for any rank
     public static int getWeightForRank(int rank) {
         switch (rank) {
             case 1:

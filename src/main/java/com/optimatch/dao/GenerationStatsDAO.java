@@ -10,9 +10,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Data Access Object for the {@code generation_stats} table.
- */
+// CRUD for the generation_stats table
 public class GenerationStatsDAO {
 
     private static final String INSERT_SQL =
@@ -24,6 +22,7 @@ public class GenerationStatsDAO {
                     "standard_deviation, valid_count, best_ever_fitness " +
                     "FROM generation_stats WHERE run_id = ? ORDER BY generation";
 
+    // batch insert, generated ids written back into the list
     public void insertBatch(List<GenerationStats> statsList) throws SQLException {
         if (statsList.isEmpty()) {
             return;
@@ -56,6 +55,7 @@ public class GenerationStatsDAO {
         }
     }
 
+    // load all stats rows for a given run, ordered by generation
     public List<GenerationStats> findByRun(int runId) throws SQLException {
         List<GenerationStats> statsList = new ArrayList<>();
         try (Connection conn = DatabaseConnection.getConnection();
@@ -71,6 +71,7 @@ public class GenerationStatsDAO {
         return statsList;
     }
 
+    // row -> GenerationStats
     private GenerationStats mapResultSetToGenerationStats(ResultSet rs) throws SQLException {
         GenerationStats stats = new GenerationStats();
         stats.setId(rs.getInt("id"));

@@ -17,10 +17,7 @@ import java.io.File;
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 
-/**
- * ViewModel for the Results display screen.
- * Handles loading and displaying matching results with export functionality.
- */
+// view model for the results screen: pick a run, show its data, export to file
 public class ResultsViewModel {
 
     private final MatchingService matchingService;
@@ -28,11 +25,11 @@ public class ResultsViewModel {
 
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
-    // Available runs
+    // available runs and currently chosen one
     private final ObservableList<AlgorithmRun> availableRuns = FXCollections.observableArrayList();
     private final ObjectProperty<AlgorithmRun> selectedRun = new SimpleObjectProperty<>();
 
-    // Summary statistics
+    // top-line summary numbers
     private final IntegerProperty totalStudents = new SimpleIntegerProperty(0);
     private final IntegerProperty totalProjects = new SimpleIntegerProperty(0);
     private final DoubleProperty bestFitness = new SimpleDoubleProperty(0);
@@ -44,50 +41,35 @@ public class ResultsViewModel {
     private final IntegerProperty fifthChoiceCount = new SimpleIntegerProperty(0);
     private final IntegerProperty unmatchedCount = new SimpleIntegerProperty(0);
 
-    // Assignment details
+    // table data
     private final ObservableList<StudentAssignmentDetail> studentAssignments = FXCollections.observableArrayList();
     private final ObservableList<ProjectAssignmentDetail> projectAssignments = FXCollections.observableArrayList();
     private final ObservableList<GenerationStats> generationStats = FXCollections.observableArrayList();
 
-    // Current summary (for export)
+    // cached for the export buttons
     private MatchingSummary currentSummary;
 
-    // Status
+    // status bar message
     private final StringProperty statusMessage = new SimpleStringProperty("");
-    private final BooleanProperty hasData = new SimpleBooleanProperty(false);
 
-    /**
-     * Creates a ResultsViewModel with default services.
-     */
+    // wires up services and loads initial data
     public ResultsViewModel() {
-        this(new MatchingService(), new ReportService());
-    }
+        this.matchingService = new MatchingService();
+        this.reportService = new ReportService();
 
-    /**
-     * Creates a ResultsViewModel with the specified services.
-     *
-     * @param matchingService the matching service
-     * @param reportService   the report service
-     */
-    public ResultsViewModel(MatchingService matchingService, ReportService reportService) {
-        this.matchingService = matchingService;
-        this.reportService = reportService;
-
-        // Listen for run selection changes
+        // reload right side whenever the chosen run changes
         selectedRun.addListener((obs, oldVal, newVal) -> loadRunData(newVal));
 
         refresh();
     }
 
-    /**
-     * Refreshes the list of available runs.
-     */
+    // reload run list and auto-select the newest run
     public void refresh() {
         try {
             availableRuns.setAll(matchingService.getAllRuns());
 
             if (!availableRuns.isEmpty()) {
-                // DAO already orders runs by run_timestamp DESC, so the first is the latest.
+                // RU: DAO уже сортирует по run_timestamp DESC, так что первый - последний
                 selectedRun.set(availableRuns.get(0));
                 statusMessage.set("Loaded " + availableRuns.size() + " runs");
             } else {
@@ -99,9 +81,7 @@ public class ResultsViewModel {
         }
     }
 
-    /**
-     * Loads data for a specific run.
-     */
+    // populate all detail panels for a chosen run
     private void loadRunData(AlgorithmRun run) {
         if (run == null) {
             clearData();
@@ -109,10 +89,8 @@ public class ResultsViewModel {
         }
 
         try {
-            // Load summary
             currentSummary = reportService.generateSummary(run.getId());
 
-            // Update summary properties
             totalStudents.set(currentSummary.getTotalStudents());
             totalProjects.set(currentSummary.getTotalProjects());
             bestFitness.set(run.getBestFitness());
@@ -126,14 +104,11 @@ public class ResultsViewModel {
             fifthChoiceCount.set(dist[5]);
             unmatchedCount.set(dist[0]);
 
-            // Load detailed assignments
             studentAssignments.setAll(reportService.generateStudentReport(run.getId()));
             projectAssignments.setAll(reportService.generateProjectReport(run.getId()));
 
-            // Load generation statistics
             generationStats.setAll(matchingService.getGenerationStatsForRun(run.getId()));
 
-            hasData.set(true);
             statusMessage.set("Showing results for run from " + run.getRunTimestamp().format(DATE_FORMAT));
 
         } catch (ServiceException e) {
@@ -142,9 +117,7 @@ public class ResultsViewModel {
         }
     }
 
-    /**
-     * Clears all displayed data.
-     */
+    // wipe all detail panels
     private void clearData() {
         currentSummary = null;
         totalStudents.set(0);
@@ -160,15 +133,9 @@ public class ResultsViewModel {
         studentAssignments.clear();
         projectAssignments.clear();
         generationStats.clear();
-        hasData.set(false);
     }
 
-    /**
-     * Exports student assignments to CSV.
-     *
-     * @param file the output file
-     * @return true if successful
-     */
+    // export per-student CSV
     public boolean exportStudentsCsv(File file) {
         if (selectedRun.get() == null || currentSummary == null) {
             statusMessage.set("No data to export");
@@ -185,12 +152,7 @@ public class ResultsViewModel {
         }
     }
 
-    /**
-     * Exports project assignments to CSV.
-     *
-     * @param file the output file
-     * @return true if successful
-     */
+    // export per-project CSV
     public boolean exportProjectsCsv(File file) {
         if (selectedRun.get() == null || currentSummary == null) {
             statusMessage.set("No data to export");
@@ -207,12 +169,7 @@ public class ResultsViewModel {
         }
     }
 
-    /**
-     * Exports full report to text file.
-     *
-     * @param file the output file
-     * @return true if successful
-     */
+    // export the full text report
     public boolean exportFullReport(File file) {
         if (selectedRun.get() == null || currentSummary == null) {
             statusMessage.set("No data to export");
@@ -230,12 +187,7 @@ public class ResultsViewModel {
         }
     }
 
-    /**
-     * Exports generation statistics to CSV.
-     *
-     * @param file the output file
-     * @return true if successful
-     */
+    // export per-generation CSV
     public boolean exportGenerationsCsv(File file) {
         if (selectedRun.get() == null || generationStats.isEmpty()) {
             statusMessage.set("No generation data to export");
@@ -252,11 +204,7 @@ public class ResultsViewModel {
         }
     }
 
-    /**
-     * Deletes the currently selected run.
-     *
-     * @return true if successful
-     */
+    // delete the chosen run
     public boolean deleteSelectedRun() {
         if (selectedRun.get() == null) {
             statusMessage.set("No run selected");
@@ -274,12 +222,7 @@ public class ResultsViewModel {
         }
     }
 
-    /**
-     * Formats a run for display in a ComboBox.
-     *
-     * @param run the algorithm run
-     * @return formatted display string
-     */
+    // pretty label for a run, used by the dropdown
     public static String formatRunForDisplay(AlgorithmRun run) {
         if (run == null) {
             return "";
@@ -292,71 +235,83 @@ public class ResultsViewModel {
 
     // ==================== Property Getters ====================
 
+    // available runs
     public ObservableList<AlgorithmRun> getAvailableRuns() {
         return availableRuns;
     }
 
+    // currently selected run
     public ObjectProperty<AlgorithmRun> selectedRunProperty() {
         return selectedRun;
     }
 
+    // total students
     public IntegerProperty totalStudentsProperty() {
         return totalStudents;
     }
 
+    // total projects
     public IntegerProperty totalProjectsProperty() {
         return totalProjects;
     }
 
+    // best fitness
     public DoubleProperty bestFitnessProperty() {
         return bestFitness;
     }
 
+    // satisfaction percentage
     public DoubleProperty satisfactionRateProperty() {
         return satisfactionRate;
     }
 
+    // count of first-choice assignments
     public IntegerProperty firstChoiceCountProperty() {
         return firstChoiceCount;
     }
 
+    // count of second-choice assignments
     public IntegerProperty secondChoiceCountProperty() {
         return secondChoiceCount;
     }
 
+    // count of third-choice assignments
     public IntegerProperty thirdChoiceCountProperty() {
         return thirdChoiceCount;
     }
 
+    // count of fourth-choice assignments
     public IntegerProperty fourthChoiceCountProperty() {
         return fourthChoiceCount;
     }
 
+    // count of fifth-choice assignments
     public IntegerProperty fifthChoiceCountProperty() {
         return fifthChoiceCount;
     }
 
+    // count of unmatched students
     public IntegerProperty unmatchedCountProperty() {
         return unmatchedCount;
     }
 
+    // student assignment rows
     public ObservableList<StudentAssignmentDetail> getStudentAssignments() {
         return studentAssignments;
     }
 
+    // project assignment rows
     public ObservableList<ProjectAssignmentDetail> getProjectAssignments() {
         return projectAssignments;
     }
 
+    // generation stats rows
     public ObservableList<GenerationStats> getGenerationStats() {
         return generationStats;
     }
 
+    // status message
     public StringProperty statusMessageProperty() {
         return statusMessage;
-    }
-
-    public BooleanProperty hasDataProperty() {
-        return hasData;
     }
 }

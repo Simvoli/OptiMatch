@@ -24,7 +24,6 @@ The project is built around a clean MVVM architecture with a clear separation be
 12. [Testing](#testing)
 13. [Test Data](#test-data)
 14. [Building a Distributable](#building-a-distributable)
-15. [License](#license)
 
 ---
 
@@ -81,8 +80,8 @@ OptiMatch follows a layered MVVM architecture. Each layer has a single, clear re
                        │
 ┌──────────────────────▼──────────────────────────────┐
 │                    Service Layer                    │
-│  StudentService   ProjectService   PreferenceService│
-│  MatchingService  ReportService                     │
+│  StudentService   ProjectService   MatchingService  │
+│  ReportService    ServiceException                  │
 └──────────────────────┬──────────────────────────────┘
                        │
         ┌──────────────┴───────────────┐
@@ -104,7 +103,7 @@ OptiMatch follows a layered MVVM architecture. Each layer has a single, clear re
                                   └───────────┘
 ```
 
-**Why MVVM?** ViewModels expose JavaFX `Property` objects that the FXML controllers bind to, so the UI updates automatically whenever model state changes. The algorithm runs on a shared daemon executor (`AppLifecycle.getBackgroundExecutor()`); UI updates are marshalled back to the JavaFX Application Thread via `Platform.runLater`, keeping the interface responsive even during long runs. On application exit, `App.stop()` invokes `AppLifecycle.shutdown()` and `DatabaseConnection.closeConnection()` to release every long-lived resource cleanly.
+**Why MVVM?** ViewModels expose JavaFX `Property` objects that the FXML controllers bind to, so the UI updates automatically whenever model state changes. The algorithm runs on a shared daemon executor (`AppLifecycle.getBackgroundExecutor()`); UI updates are marshalled back to the JavaFX Application Thread via `Platform.runLater`, keeping the interface responsive even during long runs. On application exit, `App.stop()` invokes `AppLifecycle.shutdown()` to release the background executor cleanly.
 
 ## Genetic Algorithm
 
@@ -304,7 +303,6 @@ optimatch/
     │   │   ├── service/                       Business logic
     │   │   │   ├── StudentService.java
     │   │   │   ├── ProjectService.java
-    │   │   │   ├── PreferenceService.java
     │   │   │   ├── MatchingService.java
     │   │   │   ├── ReportService.java
     │   │   │   └── ServiceException.java

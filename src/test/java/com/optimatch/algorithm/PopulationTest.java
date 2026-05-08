@@ -9,9 +9,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Unit tests for the Population class.
- */
+// unit tests for Population
 @DisplayName("Population Tests")
 class PopulationTest {
 

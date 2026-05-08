@@ -7,10 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Data Access Object for Project entities.
- * Provides CRUD operations for the projects table.
- */
+// CRUD for the projects table
 public class ProjectDAO {
 
     private static final String INSERT_SQL =
@@ -21,9 +18,6 @@ public class ProjectDAO {
                     "max_capacity = ?, required_gpa = ? WHERE id = ?";
     private static final String DELETE_SQL =
             "DELETE FROM projects WHERE id = ?";
-    private static final String SELECT_BY_ID_SQL =
-            "SELECT id, code, name, description, min_capacity, max_capacity, required_gpa " +
-                    "FROM projects WHERE id = ?";
     private static final String SELECT_BY_CODE_SQL =
             "SELECT id, code, name, description, min_capacity, max_capacity, required_gpa " +
                     "FROM projects WHERE code = ?";
@@ -33,13 +27,7 @@ public class ProjectDAO {
     private static final String COUNT_SQL =
             "SELECT COUNT(*) FROM projects";
 
-    /**
-     * Inserts a new project into the database.
-     *
-     * @param project the project to insert
-     * @return the generated ID for the new project
-     * @throws SQLException if a database error occurs
-     */
+    // insert and assign generated id back to the entity
     public int insert(Project project) throws SQLException {
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(INSERT_SQL, Statement.RETURN_GENERATED_KEYS)) {
@@ -64,13 +52,7 @@ public class ProjectDAO {
         }
     }
 
-    /**
-     * Updates an existing project in the database.
-     *
-     * @param project the project to update
-     * @return true if the update was successful
-     * @throws SQLException if a database error occurs
-     */
+    // update by id, returns true on success
     public boolean update(Project project) throws SQLException {
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(UPDATE_SQL)) {
@@ -87,13 +69,7 @@ public class ProjectDAO {
         }
     }
 
-    /**
-     * Deletes a project from the database.
-     *
-     * @param id the ID of the project to delete
-     * @return true if the deletion was successful
-     * @throws SQLException if a database error occurs
-     */
+    // delete by db id
     public boolean delete(int id) throws SQLException {
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(DELETE_SQL)) {
@@ -103,35 +79,7 @@ public class ProjectDAO {
         }
     }
 
-    /**
-     * Finds a project by its database ID.
-     *
-     * @param id the database ID
-     * @return an Optional containing the project if found
-     * @throws SQLException if a database error occurs
-     */
-    public Optional<Project> findById(int id) throws SQLException {
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(SELECT_BY_ID_SQL)) {
-
-            stmt.setInt(1, id);
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(mapResultSetToProject(rs));
-                }
-            }
-        }
-        return Optional.empty();
-    }
-
-    /**
-     * Finds a project by its code.
-     *
-     * @param code the project code
-     * @return an Optional containing the project if found
-     * @throws SQLException if a database error occurs
-     */
+    // find by short code
     public Optional<Project> findByCode(String code) throws SQLException {
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(SELECT_BY_CODE_SQL)) {
@@ -147,12 +95,7 @@ public class ProjectDAO {
         return Optional.empty();
     }
 
-    /**
-     * Retrieves all projects from the database.
-     *
-     * @return a list of all projects
-     * @throws SQLException if a database error occurs
-     */
+    // load all projects ordered by code
     public List<Project> findAll() throws SQLException {
         List<Project> projects = new ArrayList<>();
 
@@ -167,12 +110,7 @@ public class ProjectDAO {
         return projects;
     }
 
-    /**
-     * Counts the total number of projects in the database.
-     *
-     * @return the count of projects
-     * @throws SQLException if a database error occurs
-     */
+    // total project count
     public int count() throws SQLException {
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(COUNT_SQL);
@@ -185,13 +123,7 @@ public class ProjectDAO {
         return 0;
     }
 
-    /**
-     * Maps a ResultSet row to a Project object.
-     *
-     * @param rs the ResultSet positioned at a valid row
-     * @return a Project object
-     * @throws SQLException if a database error occurs
-     */
+    // row -> Project
     private Project mapResultSetToProject(ResultSet rs) throws SQLException {
         Project project = new Project();
         project.setId(rs.getInt("id"));

@@ -1,26 +1,14 @@
 package com.optimatch.service;
 
-/**
- * Exception thrown by service layer operations.
- * Wraps underlying exceptions (SQL, validation, etc.) with user-friendly messages.
- */
+// generic checked exception thrown by service layer
 public class ServiceException extends Exception {
 
-    /**
-     * Creates a ServiceException with the specified message.
-     *
-     * @param message the error message
-     */
+    // message only
     public ServiceException(String message) {
         super(message);
     }
 
-    /**
-     * Creates a ServiceException with the specified message and cause.
-     *
-     * @param message the error message
-     * @param cause   the underlying cause
-     */
+    // message and underlying cause
     public ServiceException(String message, Throwable cause) {
         super(message, cause);
     }

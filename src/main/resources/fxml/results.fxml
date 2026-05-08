@@ -20,7 +20,7 @@
                 <Label text="Select Run:" style="-fx-font-weight: bold;"/>
                 <ComboBox fx:id="runSelector" prefWidth="350"/>
                 <Button text="Refresh" onAction="#refresh" styleClass="secondary-button"/>
-                <Button fx:id="deleteRunButton" text="Delete Run" onAction="#deleteRun" styleClass="danger-button"/>
+                <Button text="Delete Run" onAction="#deleteRun" styleClass="danger-button"/>
                 <Region HBox.hgrow="ALWAYS"/>
 
                 <!-- Export Buttons -->

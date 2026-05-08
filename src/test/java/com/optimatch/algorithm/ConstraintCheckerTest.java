@@ -13,9 +13,7 @@ import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Unit tests for the ConstraintChecker class.
- */
+// unit tests for ConstraintChecker
 @DisplayName("ConstraintChecker Tests")
 class ConstraintCheckerTest {
 

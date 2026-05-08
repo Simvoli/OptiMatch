@@ -1,9 +1,6 @@
 package com.optimatch.model;
 
-/**
- * Represents statistics for a single generation of the genetic algorithm.
- * Used for persisting and displaying per-generation data.
- */
+// fitness stats for one generation, persisted alongside the run
 public class GenerationStats {
 
     private int id;
@@ -16,24 +13,11 @@ public class GenerationStats {
     private int validCount;
     private double bestEverFitness;
 
-    /**
-     * Default constructor.
-     */
+    // empty stats
     public GenerationStats() {
     }
 
-    /**
-     * Creates a GenerationStats record without a run ID.
-     * The run ID is set later when persisting to the database.
-     *
-     * @param generation        the generation number (0-based)
-     * @param bestFitness       best fitness in this generation
-     * @param averageFitness    average fitness in this generation
-     * @param worstFitness      worst fitness in this generation
-     * @param standardDeviation fitness standard deviation
-     * @param validCount        count of valid chromosomes
-     * @param bestEverFitness   best fitness found so far (across all generations)
-     */
+    // stats without run id (set later when persisting)
     public GenerationStats(int generation, double bestFitness, double averageFitness,
                            double worstFitness, double standardDeviation, int validCount,
                            double bestEverFitness) {
@@ -41,18 +25,7 @@ public class GenerationStats {
                 standardDeviation, validCount, bestEverFitness);
     }
 
-    /**
-     * Creates a GenerationStats with all fields except id.
-     *
-     * @param runId             the algorithm run ID
-     * @param generation        the generation number (0-based)
-     * @param bestFitness       best fitness in this generation
-     * @param averageFitness    average fitness in this generation
-     * @param worstFitness      worst fitness in this generation
-     * @param standardDeviation fitness standard deviation
-     * @param validCount        count of valid chromosomes
-     * @param bestEverFitness   best fitness found so far (across all generations)
-     */
+    // full stats
     public GenerationStats(int runId, int generation, double bestFitness, double averageFitness,
                            double worstFitness, double standardDeviation, int validCount,
                            double bestEverFitness) {
@@ -66,76 +39,92 @@ public class GenerationStats {
         this.bestEverFitness = bestEverFitness;
     }
 
-    // ==================== Getters and Setters ====================
-
+    // db id
     public int getId() {
         return id;
     }
 
+    // set db id
     public void setId(int id) {
         this.id = id;
     }
 
+    // owning run id
     public int getRunId() {
         return runId;
     }
 
+    // set owning run id
     public void setRunId(int runId) {
         this.runId = runId;
     }
 
+    // generation number (0-based)
     public int getGeneration() {
         return generation;
     }
 
+    // set generation number
     public void setGeneration(int generation) {
         this.generation = generation;
     }
 
+    // best fitness this generation
     public double getBestFitness() {
         return bestFitness;
     }
 
+    // set best fitness this generation
     public void setBestFitness(double bestFitness) {
         this.bestFitness = bestFitness;
     }
 
+    // average fitness this generation
     public double getAverageFitness() {
         return averageFitness;
     }
 
+    // set average fitness
     public void setAverageFitness(double averageFitness) {
         this.averageFitness = averageFitness;
     }
 
+    // worst fitness this generation
     public double getWorstFitness() {
         return worstFitness;
     }
 
+    // set worst fitness
     public void setWorstFitness(double worstFitness) {
         this.worstFitness = worstFitness;
     }
 
+    // population std dev this generation
     public double getStandardDeviation() {
         return standardDeviation;
     }
 
+    // set std dev
     public void setStandardDeviation(double standardDeviation) {
         this.standardDeviation = standardDeviation;
     }
 
+    // number of valid chromosomes this generation
     public int getValidCount() {
         return validCount;
     }
 
+    // set valid count
     public void setValidCount(int validCount) {
         this.validCount = validCount;
     }
 
+    // best fitness ever (cumulative across generations)
     public double getBestEverFitness() {
         return bestEverFitness;
     }
 
+    // set best ever fitness
     public void setBestEverFitness(double bestEverFitness) {
         this.bestEverFitness = bestEverFitness;
     }

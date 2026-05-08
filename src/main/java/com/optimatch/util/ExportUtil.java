@@ -14,50 +14,38 @@ import java.nio.charset.StandardCharsets;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-/**
- * Utility class for exporting matching results to various formats.
- */
+// CSV and text exports of matching results
 public class ExportUtil {
 
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static final String CSV_SEPARATOR = ",";
-    /** UTF-8 BOM written at the start of CSV files so Excel detects the encoding. */
+    // RU: BOM нужен Excel-у, чтобы открыть UTF-8 csv корректно
     private static final String UTF8_BOM = "﻿";
+    // RU: Excel в русской локали по умолчанию использует ; как разделитель.
+    // Директива sep=, заставляет его использовать запятую независимо от локали.
+    // LibreOffice 7+ её тоже понимает
+    private static final String EXCEL_SEPARATOR_HINT = "sep=,";
 
+    // utility class, no instances
     private ExportUtil() {
-        // Utility class
     }
 
-    /**
-     * Opens a UTF-8 buffered writer for the given file. CSV files
-     * additionally receive a BOM so Excel imports them correctly.
-     *
-     * @param file       target file
-     * @param withBom    whether to emit a UTF-8 BOM
-     * @return the buffered writer
-     * @throws IOException if the file cannot be opened for writing
-     */
-    private static BufferedWriter openWriter(File file, boolean withBom) throws IOException {
+    // open utf-8 buffered writer, optionally write the BOM and Excel separator hint
+    private static BufferedWriter openWriter(File file, boolean csv) throws IOException {
         BufferedWriter writer = new BufferedWriter(new FileWriter(file, StandardCharsets.UTF_8));
-        if (withBom) {
+        if (csv) {
             writer.write(UTF8_BOM);
+            writer.write(EXCEL_SEPARATOR_HINT);
+            writer.newLine();
         }
         return writer;
     }
 
-    /**
-     * Exports student assignments to CSV format.
-     *
-     * @param file       the output file
-     * @param run        the algorithm run
-     * @param summary    the matching summary
-     * @param details    the student assignment details
-     * @throws IOException if writing fails
-     */
+    // CSV with one row per student
     public static void exportStudentsCsv(File file, AlgorithmRun run, MatchingSummary summary,
                                          List<StudentAssignmentDetail> details) throws IOException {
         try (BufferedWriter writer = openWriter(file, true)) {
-            // Header comments
+            // metadata header
             writer.write("# OptiMatch - Student Assignment Results");
             writer.newLine();
             writer.write("# Run Date: " + run.getRunTimestamp().format(DATE_FORMAT));
@@ -68,11 +56,11 @@ public class ExportUtil {
             writer.newLine();
             writer.newLine();
 
-            // CSV header
+            // column header
             writer.write("Student ID,Student Name,Email,GPA,Project Code,Project Name,Preference Rank,Satisfaction Score");
             writer.newLine();
 
-            // Data rows
+            // data rows
             for (StudentAssignmentDetail detail : details) {
                 writer.write(escapeCsv(detail.getStudent().getStudentId()));
                 writer.write(CSV_SEPARATOR);
@@ -94,19 +82,11 @@ public class ExportUtil {
         }
     }
 
-    /**
-     * Exports project assignments to CSV format.
-     *
-     * @param file       the output file
-     * @param run        the algorithm run
-     * @param summary    the matching summary
-     * @param details    the project assignment details
-     * @throws IOException if writing fails
-     */
+    // CSV with one row per project
     public static void exportProjectsCsv(File file, AlgorithmRun run, MatchingSummary summary,
                                          List<ProjectAssignmentDetail> details) throws IOException {
         try (BufferedWriter writer = openWriter(file, true)) {
-            // Header comments
+            // metadata header
             writer.write("# OptiMatch - Project Assignment Results");
             writer.newLine();
             writer.write("# Run Date: " + run.getRunTimestamp().format(DATE_FORMAT));
@@ -115,11 +95,11 @@ public class ExportUtil {
             writer.newLine();
             writer.newLine();
 
-            // CSV header
+            // column header
             writer.write("Project Code,Project Name,Min Capacity,Max Capacity,Assigned Count,Status,Assigned Students");
             writer.newLine();
 
-            // Data rows
+            // data rows
             for (ProjectAssignmentDetail detail : details) {
                 writer.write(escapeCsv(detail.getProject().getCode()));
                 writer.write(CSV_SEPARATOR);
@@ -134,7 +114,7 @@ public class ExportUtil {
                 writer.write(detail.isValid() ? "OK" : (detail.isMeetsMinCapacity() ? "Over" : "Under"));
                 writer.write(CSV_SEPARATOR);
 
-                // List of student names
+                // join student names with semicolons inside one cell
                 StringBuilder students = new StringBuilder();
                 for (int i = 0; i < detail.getAssignedStudents().size(); i++) {
                     if (i > 0) {
@@ -148,21 +128,12 @@ public class ExportUtil {
         }
     }
 
-    /**
-     * Exports a full report in text format.
-     *
-     * @param file           the output file
-     * @param run            the algorithm run
-     * @param summary        the matching summary
-     * @param studentDetails the student assignment details
-     * @param projectDetails the project assignment details
-     * @throws IOException if writing fails
-     */
+    // human-readable text report covering students and projects
     public static void exportFullReport(File file, AlgorithmRun run, MatchingSummary summary,
                                         List<StudentAssignmentDetail> studentDetails,
                                         List<ProjectAssignmentDetail> projectDetails) throws IOException {
         try (BufferedWriter writer = openWriter(file, false)) {
-            // Title
+            // title
             writer.write("================================================================================");
             writer.newLine();
             writer.write("                    OptiMatch - Matching Results Report");
@@ -171,7 +142,7 @@ public class ExportUtil {
             writer.newLine();
             writer.newLine();
 
-            // Run Information
+            // run info
             writer.write("RUN INFORMATION");
             writer.newLine();
             writer.write("---------------");
@@ -190,7 +161,7 @@ public class ExportUtil {
             writer.newLine();
             writer.newLine();
 
-            // Summary Statistics
+            // summary block
             writer.write("SUMMARY STATISTICS");
             writer.newLine();
             writer.write("------------------");
@@ -205,7 +176,7 @@ public class ExportUtil {
             writer.newLine();
             writer.newLine();
 
-            // Preference Distribution
+            // preference distribution block
             writer.write("PREFERENCE DISTRIBUTION");
             writer.newLine();
             writer.write("-----------------------");
@@ -225,7 +196,7 @@ public class ExportUtil {
             writer.newLine();
             writer.newLine();
 
-            // Student Assignments
+            // student assignments block
             writer.write("================================================================================");
             writer.newLine();
             writer.write("STUDENT ASSIGNMENTS");
@@ -251,7 +222,7 @@ public class ExportUtil {
             }
             writer.newLine();
 
-            // Project Assignments
+            // project assignments block
             writer.write("================================================================================");
             writer.newLine();
             writer.write("PROJECT ASSIGNMENTS");
@@ -282,7 +253,7 @@ public class ExportUtil {
                 writer.newLine();
             }
 
-            // Footer
+            // footer
             writer.write("================================================================================");
             writer.newLine();
             writer.write("                         End of Report");
@@ -292,18 +263,11 @@ public class ExportUtil {
         }
     }
 
-    /**
-     * Exports generation statistics to CSV format.
-     *
-     * @param file       the output file
-     * @param run        the algorithm run
-     * @param stats      the generation statistics
-     * @throws IOException if writing fails
-     */
+    // CSV with one row per generation
     public static void exportGenerationsCsv(File file, AlgorithmRun run,
                                             List<GenerationStats> stats) throws IOException {
         try (BufferedWriter writer = openWriter(file, true)) {
-            // Header comments
+            // metadata header
             writer.write("# OptiMatch - Generation Statistics");
             writer.newLine();
             writer.write("# Run Date: " + run.getRunTimestamp().format(DATE_FORMAT));
@@ -316,11 +280,11 @@ public class ExportUtil {
             writer.newLine();
             writer.newLine();
 
-            // CSV header
+            // column header
             writer.write("Generation,Best Fitness,Average Fitness,Worst Fitness,Std Deviation,Valid Count,Best Ever");
             writer.newLine();
 
-            // Data rows
+            // data rows
             for (GenerationStats stat : stats) {
                 writer.write(String.valueOf(stat.getGeneration()));
                 writer.write(CSV_SEPARATOR);
@@ -340,9 +304,7 @@ public class ExportUtil {
         }
     }
 
-    /**
-     * Escapes a string for CSV format.
-     */
+    // wrap a CSV value in quotes if it contains a separator, quote or newline
     private static String escapeCsv(String value) {
         if (value == null) {
             return "";
@@ -353,9 +315,7 @@ public class ExportUtil {
         return value;
     }
 
-    /**
-     * Calculates percentage string.
-     */
+    // formatted percentage string, "0.0%" if total is zero
     private static String percentage(int count, int total) {
         if (total == 0) {
             return "0.0%";
@@ -363,9 +323,7 @@ public class ExportUtil {
         return String.format("%.1f%%", (count * 100.0) / total);
     }
 
-    /**
-     * Truncates a string to the specified length.
-     */
+    // shorten a value to fit a column, adds ... when truncated
     private static String truncate(String value, int maxLength) {
         if (value == null) {
             return "";

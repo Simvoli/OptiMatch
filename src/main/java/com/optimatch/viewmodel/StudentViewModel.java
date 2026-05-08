@@ -13,67 +13,51 @@ import javafx.collections.transformation.FilteredList;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
-/**
- * ViewModel for the Student management screen.
- * Handles data binding and business logic for the UI.
- */
+// view model for the students screen: form fields, search, save, delete
 public class StudentViewModel {
 
     private final StudentService studentService;
     private final ProjectService projectService;
 
-    // Observable collections
+    // observable data
     private final ObservableList<Student> students = FXCollections.observableArrayList();
     private final FilteredList<Student> filteredStudents = new FilteredList<>(students, p -> true);
     private final ObservableList<Project> projects = FXCollections.observableArrayList();
 
-    // Selected student
+    // selected student in the table
     private final ObjectProperty<Student> selectedStudent = new SimpleObjectProperty<>();
 
-    // Form fields
+    // form fields
     private final StringProperty studentId = new SimpleStringProperty("");
     private final StringProperty name = new SimpleStringProperty("");
     private final StringProperty email = new SimpleStringProperty("");
     private final DoubleProperty gpa = new SimpleDoubleProperty(0.0);
     private final ObjectProperty<Student> selectedPartner = new SimpleObjectProperty<>();
 
-    // Preferences (up to 5)
+    // five ranked preferences
     private final ObjectProperty<Project> preference1 = new SimpleObjectProperty<>();
     private final ObjectProperty<Project> preference2 = new SimpleObjectProperty<>();
     private final ObjectProperty<Project> preference3 = new SimpleObjectProperty<>();
     private final ObjectProperty<Project> preference4 = new SimpleObjectProperty<>();
     private final ObjectProperty<Project> preference5 = new SimpleObjectProperty<>();
 
-    // Search/filter
+    // search box text
     private final StringProperty searchText = new SimpleStringProperty("");
 
-    // Status message
+    // status bar message
     private final StringProperty statusMessage = new SimpleStringProperty("");
 
-    // Edit mode
+    // edit vs create flag, plus id of the student being edited
     private final BooleanProperty editMode = new SimpleBooleanProperty(false);
     private int editingStudentId = -1;
 
-    /**
-     * Creates a StudentViewModel with default services.
-     */
+    // wires up services and search filter, then loads data
     public StudentViewModel() {
-        this(new StudentService(), new ProjectService());
-    }
+        this.studentService = new StudentService();
+        this.projectService = new ProjectService();
 
-    /**
-     * Creates a StudentViewModel with the specified services.
-     *
-     * @param studentService the student service
-     * @param projectService the project service
-     */
-    public StudentViewModel(StudentService studentService, ProjectService projectService) {
-        this.studentService = studentService;
-        this.projectService = projectService;
-
-        // Set up search filter
+        // search filter: name, student id or email
         searchText.addListener((obs, oldVal, newVal) -> {
             filteredStudents.setPredicate(student -> {
                 if (newVal == null || newVal.isEmpty()) {
@@ -86,13 +70,10 @@ public class StudentViewModel {
             });
         });
 
-        // Load initial data
         refresh();
     }
 
-    /**
-     * Refreshes data from the database.
-     */
+    // reload students and projects from db
     public void refresh() {
         try {
             students.setAll(studentService.getAllStudents());
@@ -103,9 +84,7 @@ public class StudentViewModel {
         }
     }
 
-    /**
-     * Clears the form fields.
-     */
+    // wipe form and exit edit mode
     public void clearForm() {
         studentId.set("");
         name.set("");
@@ -122,11 +101,7 @@ public class StudentViewModel {
         selectedStudent.set(null);
     }
 
-    /**
-     * Loads the selected student's data into the form.
-     *
-     * @param student the student to edit
-     */
+    // populate form from a chosen student
     public void loadStudentToForm(Student student) {
         if (student == null) {
             clearForm();
@@ -138,7 +113,7 @@ public class StudentViewModel {
         email.set(student.getEmail() != null ? student.getEmail() : "");
         gpa.set(student.getGpa());
 
-        // Load partner
+        // partner
         if (student.hasPartner()) {
             students.stream()
                     .filter(s -> s.getId() == student.getPartnerId())
@@ -148,7 +123,7 @@ public class StudentViewModel {
             selectedPartner.set(null);
         }
 
-        // Load preferences
+        // preferences from db
         try {
             List<Preference> prefs = studentService.getPreferences(student.getId());
             preference1.set(null);
@@ -180,14 +155,9 @@ public class StudentViewModel {
         selectedStudent.set(student);
     }
 
-    /**
-     * Saves the current form data (create or update).
-     *
-     * @return true if save was successful
-     */
+    // save form (create or update), returns true on success
     public boolean save() {
         try {
-            // Validate
             if (studentId.get().trim().isEmpty()) {
                 statusMessage.set("Student ID is required");
                 return false;
@@ -208,13 +178,11 @@ public class StudentViewModel {
             student.setGpa(gpa.get());
 
             if (editMode.get()) {
-                // Update existing
                 student.setId(editingStudentId);
 
-                // Handle partner changes
+                // RU: если партнёр поменялся - сначала отвязываем старого, иначе двойная связка
                 Student oldStudent = studentService.getStudentById(editingStudentId).orElse(null);
                 if (oldStudent != null && oldStudent.hasPartner()) {
-                    // Unlink old partner if different
                     if (selectedPartner.get() == null ||
                         selectedPartner.get().getId() != oldStudent.getPartnerId()) {
                         studentService.unlinkPartners(editingStudentId);
@@ -223,7 +191,7 @@ public class StudentViewModel {
 
                 studentService.updateStudent(student);
 
-                // Link new partner if selected
+                // привязываем нового партнёра, если он отличается от прежнего
                 if (selectedPartner.get() != null &&
                     (oldStudent == null || !oldStudent.hasPartner() ||
                      oldStudent.getPartnerId() != selectedPartner.get().getId())) {
@@ -232,10 +200,8 @@ public class StudentViewModel {
 
                 statusMessage.set("Student updated successfully");
             } else {
-                // Create new
                 studentService.createStudent(student);
 
-                // Link partner if selected
                 if (selectedPartner.get() != null) {
                     studentService.linkPartners(student.getId(), selectedPartner.get().getId());
                 }
@@ -243,7 +209,6 @@ public class StudentViewModel {
                 statusMessage.set("Student created successfully");
             }
 
-            // Save preferences
             savePreferences(student.getId());
 
             refresh();
@@ -256,9 +221,7 @@ public class StudentViewModel {
         }
     }
 
-    /**
-     * Saves preferences for a student.
-     */
+    // collect non-null preferences and pass to service
     private void savePreferences(int studentId) throws ServiceException {
         List<Preference> preferences = new ArrayList<>();
 
@@ -281,11 +244,7 @@ public class StudentViewModel {
         studentService.setPreferences(studentId, preferences);
     }
 
-    /**
-     * Deletes the currently selected student.
-     *
-     * @return true if deletion was successful
-     */
+    // delete the currently selected student
     public boolean deleteSelected() {
         if (selectedStudent.get() == null) {
             statusMessage.set("No student selected");
@@ -304,11 +263,7 @@ public class StudentViewModel {
         }
     }
 
-    /**
-     * Gets students available as partners (excluding the current student being edited).
-     *
-     * @return list of potential partners
-     */
+    // students who can still be picked as partner (no partner yet, not the current one)
     public ObservableList<Student> getAvailablePartners() {
         return students.filtered(s ->
             !s.hasPartner() &&
@@ -318,70 +273,82 @@ public class StudentViewModel {
 
     // ==================== Property Getters ====================
 
+    // raw student list
     public ObservableList<Student> getStudents() {
         return students;
     }
 
+    // filtered student list (drives the table)
     public FilteredList<Student> getFilteredStudents() {
         return filteredStudents;
     }
 
+    // available projects
     public ObservableList<Project> getProjects() {
         return projects;
     }
 
-    public ObjectProperty<Student> selectedStudentProperty() {
-        return selectedStudent;
-    }
-
+    // student id field
     public StringProperty studentIdProperty() {
         return studentId;
     }
 
+    // name field
     public StringProperty nameProperty() {
         return name;
     }
 
+    // email field
     public StringProperty emailProperty() {
         return email;
     }
 
+    // gpa field
     public DoubleProperty gpaProperty() {
         return gpa;
     }
 
+    // chosen partner
     public ObjectProperty<Student> selectedPartnerProperty() {
         return selectedPartner;
     }
 
+    // first preference
     public ObjectProperty<Project> preference1Property() {
         return preference1;
     }
 
+    // second preference
     public ObjectProperty<Project> preference2Property() {
         return preference2;
     }
 
+    // third preference
     public ObjectProperty<Project> preference3Property() {
         return preference3;
     }
 
+    // fourth preference
     public ObjectProperty<Project> preference4Property() {
         return preference4;
     }
 
+    // fifth preference
     public ObjectProperty<Project> preference5Property() {
         return preference5;
     }
 
+    // search text
     public StringProperty searchTextProperty() {
         return searchText;
     }
 
+    // status message
     public StringProperty statusMessageProperty() {
         return statusMessage;
     }
 
+    // edit vs create flag
     public BooleanProperty editModeProperty() {
         return editMode;
     }

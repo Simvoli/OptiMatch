@@ -7,9 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Unit tests for the Student model class.
- */
+// unit tests for Student
 @DisplayName("Student Model Tests")
 class StudentTest {
 

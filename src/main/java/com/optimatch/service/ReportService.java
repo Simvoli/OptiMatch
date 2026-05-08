@@ -14,29 +14,29 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-/**
- * Aggregates data from a single algorithm run into the view-ready summaries
- * consumed by the Results UI and the export utilities.
- */
+// turns raw assignments into view-ready summaries for the results screen and exports
 public class ReportService {
 
     private final StudentDAO studentDAO;
     private final ProjectDAO projectDAO;
     private final AssignmentDAO assignmentDAO;
 
+    // wires up default DAOs
     public ReportService() {
         this.studentDAO = new StudentDAO();
         this.projectDAO = new ProjectDAO();
         this.assignmentDAO = new AssignmentDAO();
     }
 
+    // top-line numbers for one run
     public MatchingSummary generateSummary(int runId) throws ServiceException {
         try {
             List<Assignment> assignments = assignmentDAO.findByRun(runId);
             List<Student> students = studentDAO.findAll();
             List<Project> projects = projectDAO.findAll();
 
-            int[] preferenceDistribution = new int[6]; // 0=none, 1-5=ranks
+            // index 0 = no preference, 1..5 = ranks
+            int[] preferenceDistribution = new int[6];
             int totalSatisfaction = 0;
             int maxPossibleSatisfaction = students.size() * Preference.WEIGHT_FIRST_CHOICE;
 
@@ -65,6 +65,7 @@ public class ReportService {
         }
     }
 
+    // per-student rows ordered by name
     public List<StudentAssignmentDetail> generateStudentReport(int runId) throws ServiceException {
         try {
             List<Assignment> assignments = assignmentDAO.findByRun(runId);
@@ -93,6 +94,7 @@ public class ReportService {
         }
     }
 
+    // per-project rows ordered by code
     public List<ProjectAssignmentDetail> generateProjectReport(int runId) throws ServiceException {
         try {
             List<Assignment> assignments = assignmentDAO.findByRun(runId);
@@ -127,6 +129,7 @@ public class ReportService {
         }
     }
 
+    // top-line summary for the results page
     public static class MatchingSummary {
         private final int totalStudents;
         private final int totalProjects;
@@ -141,23 +144,28 @@ public class ReportService {
             this.satisfactionPercentage = satisfactionPercentage;
         }
 
+        // total student count
         public int getTotalStudents() {
             return totalStudents;
         }
 
+        // total project count
         public int getTotalProjects() {
             return totalProjects;
         }
 
+        // counts per rank, index 0 = no preference
         public int[] getPreferenceDistribution() {
             return preferenceDistribution;
         }
 
+        // satisfaction expressed as a percentage of the theoretical maximum
         public double getSatisfactionPercentage() {
             return satisfactionPercentage;
         }
     }
 
+    // one row in the per-student table
     public static class StudentAssignmentDetail {
         private final Student student;
         private final Project assignedProject;
@@ -172,23 +180,28 @@ public class ReportService {
             this.satisfactionScore = satisfactionScore;
         }
 
+        // student
         public Student getStudent() {
             return student;
         }
 
+        // project the student got
         public Project getAssignedProject() {
             return assignedProject;
         }
 
+        // preference rank (null if not in their list)
         public Integer getPreferenceRank() {
             return preferenceRank;
         }
 
+        // satisfaction score for this assignment
         public int getSatisfactionScore() {
             return satisfactionScore;
         }
     }
 
+    // one row in the per-project table
     public static class ProjectAssignmentDetail {
         private final Project project;
         private final List<Student> assignedStudents;
@@ -203,22 +216,27 @@ public class ReportService {
             this.withinMaxCapacity = withinMaxCapacity;
         }
 
+        // project
         public Project getProject() {
             return project;
         }
 
+        // students assigned to it
         public List<Student> getAssignedStudents() {
             return assignedStudents;
         }
 
+        // number of assigned students
         public int getAssignedCount() {
             return assignedStudents.size();
         }
 
+        // is min capacity satisfied
         public boolean isMeetsMinCapacity() {
             return meetsMinCapacity;
         }
 
+        // both min and max satisfied
         public boolean isValid() {
             return meetsMinCapacity && withinMaxCapacity;
         }

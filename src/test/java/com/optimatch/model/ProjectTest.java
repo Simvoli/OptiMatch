@@ -7,9 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Unit tests for the Project model class.
- */
+// unit tests for Project
 @DisplayName("Project Model Tests")
 class ProjectTest {
 

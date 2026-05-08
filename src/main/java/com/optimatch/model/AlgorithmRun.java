@@ -3,10 +3,7 @@ package com.optimatch.model;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
-/**
- * Represents a single execution of the genetic algorithm.
- * Stores the parameters used and results achieved.
- */
+// metadata for one GA run: parameters, fitness, runtime
 public class AlgorithmRun {
 
     private int id;
@@ -18,25 +15,12 @@ public class AlgorithmRun {
     private double bestFitness;
     private long executionTimeMs;
 
-    /**
-     * Default constructor for AlgorithmRun.
-     */
+    // empty run with current timestamp
     public AlgorithmRun() {
         this.runTimestamp = LocalDateTime.now();
     }
 
-    /**
-     * Creates a new AlgorithmRun with the specified details.
-     *
-     * @param id              the database ID
-     * @param runTimestamp    when the algorithm was executed
-     * @param populationSize  the population size used
-     * @param generations     the number of generations run
-     * @param mutationRate    the mutation rate used
-     * @param crossoverRate   the crossover rate used
-     * @param bestFitness     the best fitness achieved
-     * @param executionTimeMs the execution time in milliseconds
-     */
+    // full run
     public AlgorithmRun(int id, LocalDateTime runTimestamp, int populationSize, int generations,
                         double mutationRate, double crossoverRate, double bestFitness, long executionTimeMs) {
         this.id = id;
@@ -49,155 +33,87 @@ public class AlgorithmRun {
         this.executionTimeMs = executionTimeMs;
     }
 
-    /**
-     * Gets the database ID.
-     *
-     * @return the database ID
-     */
+    // db id
     public int getId() {
         return id;
     }
 
-    /**
-     * Sets the database ID.
-     *
-     * @param id the database ID
-     */
+    // set db id
     public void setId(int id) {
         this.id = id;
     }
 
-    /**
-     * Gets the run timestamp.
-     *
-     * @return when the algorithm was executed
-     */
+    // when the run started
     public LocalDateTime getRunTimestamp() {
         return runTimestamp;
     }
 
-    /**
-     * Sets the run timestamp.
-     *
-     * @param runTimestamp when the algorithm was executed
-     */
+    // set start timestamp
     public void setRunTimestamp(LocalDateTime runTimestamp) {
         this.runTimestamp = runTimestamp;
     }
 
-    /**
-     * Gets the population size.
-     *
-     * @return the population size used
-     */
+    // population size used
     public int getPopulationSize() {
         return populationSize;
     }
 
-    /**
-     * Sets the population size.
-     *
-     * @param populationSize the population size used
-     */
+    // set population size
     public void setPopulationSize(int populationSize) {
         this.populationSize = populationSize;
     }
 
-    /**
-     * Gets the number of generations.
-     *
-     * @return the number of generations run
-     */
+    // generations actually run
     public int getGenerations() {
         return generations;
     }
 
-    /**
-     * Sets the number of generations.
-     *
-     * @param generations the number of generations run
-     */
+    // set generations count
     public void setGenerations(int generations) {
         this.generations = generations;
     }
 
-    /**
-     * Gets the mutation rate.
-     *
-     * @return the mutation rate used (0.0 to 1.0)
-     */
+    // mutation rate used
     public double getMutationRate() {
         return mutationRate;
     }
 
-    /**
-     * Sets the mutation rate.
-     *
-     * @param mutationRate the mutation rate used (0.0 to 1.0)
-     */
+    // set mutation rate
     public void setMutationRate(double mutationRate) {
         this.mutationRate = mutationRate;
     }
 
-    /**
-     * Gets the crossover rate.
-     *
-     * @return the crossover rate used (0.0 to 1.0)
-     */
+    // crossover rate used
     public double getCrossoverRate() {
         return crossoverRate;
     }
 
-    /**
-     * Sets the crossover rate.
-     *
-     * @param crossoverRate the crossover rate used (0.0 to 1.0)
-     */
+    // set crossover rate
     public void setCrossoverRate(double crossoverRate) {
         this.crossoverRate = crossoverRate;
     }
 
-    /**
-     * Gets the best fitness achieved.
-     *
-     * @return the best fitness score
-     */
+    // best fitness reached
     public double getBestFitness() {
         return bestFitness;
     }
 
-    /**
-     * Sets the best fitness achieved.
-     *
-     * @param bestFitness the best fitness score
-     */
+    // set best fitness
     public void setBestFitness(double bestFitness) {
         this.bestFitness = bestFitness;
     }
 
-    /**
-     * Gets the execution time.
-     *
-     * @return the execution time in milliseconds
-     */
+    // wall clock time in ms
     public long getExecutionTimeMs() {
         return executionTimeMs;
     }
 
-    /**
-     * Sets the execution time.
-     *
-     * @param executionTimeMs the execution time in milliseconds
-     */
+    // set wall clock time
     public void setExecutionTimeMs(long executionTimeMs) {
         this.executionTimeMs = executionTimeMs;
     }
 
-    /**
-     * Gets the execution time in seconds.
-     *
-     * @return the execution time in seconds
-     */
+    // wall clock time in seconds
     public double getExecutionTimeSeconds() {
         return executionTimeMs / 1000.0;
     }

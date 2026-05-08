@@ -9,46 +9,23 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Service layer for student management.
- * Handles business logic for student operations including partner linking and validation.
- */
+// student business logic: validation, partner linking, preferences
 public class StudentService {
 
     private final StudentDAO studentDAO;
     private final PreferenceDAO preferenceDAO;
 
-    /**
-     * Creates a StudentService with default DAOs.
-     */
+    // wires up default DAOs
     public StudentService() {
         this.studentDAO = new StudentDAO();
         this.preferenceDAO = new PreferenceDAO();
     }
 
-    /**
-     * Creates a StudentService with the specified DAOs.
-     *
-     * @param studentDAO    the student DAO
-     * @param preferenceDAO the preference DAO
-     */
-    public StudentService(StudentDAO studentDAO, PreferenceDAO preferenceDAO) {
-        this.studentDAO = studentDAO;
-        this.preferenceDAO = preferenceDAO;
-    }
-
-    /**
-     * Creates a new student.
-     *
-     * @param student the student to create
-     * @return the created student with generated ID
-     * @throws ServiceException if validation fails or database error occurs
-     */
+    // create a new student (rejects duplicate institutional id)
     public Student createStudent(Student student) throws ServiceException {
         validateStudent(student);
 
         try {
-            // Check for duplicate student ID
             Optional<Student> existing = studentDAO.findByStudentId(student.getStudentId());
             if (existing.isPresent()) {
                 throw new ServiceException("Student with ID " + student.getStudentId() + " already exists");
@@ -61,13 +38,7 @@ public class StudentService {
         }
     }
 
-    /**
-     * Updates an existing student.
-     *
-     * @param student the student to update
-     * @return true if update was successful
-     * @throws ServiceException if validation fails or database error occurs
-     */
+    // update an existing student
     public boolean updateStudent(Student student) throws ServiceException {
         validateStudent(student);
 
@@ -78,22 +49,16 @@ public class StudentService {
         }
     }
 
-    /**
-     * Deletes a student and their preferences.
-     *
-     * @param studentId the database ID of the student to delete
-     * @return true if deletion was successful
-     * @throws ServiceException if database error occurs
-     */
+    // delete a student and clean up partner links and preferences
     public boolean deleteStudent(int studentId) throws ServiceException {
         try {
-            // Remove partner references first
+            // unlink the partner first
             Optional<Student> student = studentDAO.findById(studentId);
             if (student.isPresent() && student.get().hasPartner()) {
                 unlinkPartners(studentId);
             }
 
-            // Preferences are deleted by CASCADE, but we can do it explicitly
+            // RU: внешний ключ стоит ON DELETE CASCADE, но удаляем явно для предсказуемости
             preferenceDAO.deleteByStudent(studentId);
 
             return studentDAO.delete(studentId);
@@ -102,13 +67,7 @@ public class StudentService {
         }
     }
 
-    /**
-     * Gets a student by database ID.
-     *
-     * @param id the database ID
-     * @return the student if found
-     * @throws ServiceException if database error occurs
-     */
+    // find student by db id
     public Optional<Student> getStudentById(int id) throws ServiceException {
         try {
             return studentDAO.findById(id);
@@ -117,12 +76,7 @@ public class StudentService {
         }
     }
 
-    /**
-     * Gets all students.
-     *
-     * @return list of all students
-     * @throws ServiceException if database error occurs
-     */
+    // load all students
     public List<Student> getAllStudents() throws ServiceException {
         try {
             return studentDAO.findAll();
@@ -131,12 +85,7 @@ public class StudentService {
         }
     }
 
-    /**
-     * Gets the total number of students.
-     *
-     * @return the count of students
-     * @throws ServiceException if database error occurs
-     */
+    // total student count
     public int getStudentCount() throws ServiceException {
         try {
             return studentDAO.count();
@@ -145,14 +94,7 @@ public class StudentService {
         }
     }
 
-    /**
-     * Links two students as partners.
-     * Partners must be assigned to the same project.
-     *
-     * @param studentId1 the first student's database ID
-     * @param studentId2 the second student's database ID
-     * @throws ServiceException if students not found or already have partners
-     */
+    // link two students as partners (both directions written to db)
     public void linkPartners(int studentId1, int studentId2) throws ServiceException {
         if (studentId1 == studentId2) {
             throw new ServiceException("A student cannot be their own partner");
@@ -179,7 +121,6 @@ public class StudentService {
                 throw new ServiceException("Student " + student2.getName() + " already has a partner");
             }
 
-            // Link both directions
             student1.setPartnerId(studentId2);
             student2.setPartnerId(studentId1);
 
@@ -191,12 +132,7 @@ public class StudentService {
         }
     }
 
-    /**
-     * Unlinks a student from their partner.
-     *
-     * @param studentId the database ID of either partner
-     * @throws ServiceException if student not found or has no partner
-     */
+    // remove partner link from a student and the partner
     public void unlinkPartners(int studentId) throws ServiceException {
         try {
             Optional<Student> studentOpt = studentDAO.findById(studentId);
@@ -212,7 +148,6 @@ public class StudentService {
             int partnerId = student.getPartnerId();
             Optional<Student> partnerOpt = studentDAO.findById(partnerId);
 
-            // Unlink both
             student.setPartnerId(null);
             studentDAO.update(student);
 
@@ -227,17 +162,9 @@ public class StudentService {
         }
     }
 
-    /**
-     * Sets the preferences for a student.
-     * Replaces any existing preferences.
-     *
-     * @param studentId   the student's database ID
-     * @param preferences list of preferences (must have correct studentId set)
-     * @throws ServiceException if database error occurs
-     */
+    // replace all preferences for a student
     public void setPreferences(int studentId, List<Preference> preferences) throws ServiceException {
         try {
-            // Validate preferences
             for (Preference pref : preferences) {
                 if (pref.getStudentId() != studentId) {
                     throw new ServiceException("Preference student ID does not match");
@@ -247,10 +174,8 @@ public class StudentService {
                 }
             }
 
-            // Delete existing preferences
             preferenceDAO.deleteByStudent(studentId);
 
-            // Insert new preferences
             if (!preferences.isEmpty()) {
                 preferenceDAO.insertBatch(preferences);
             }
@@ -260,13 +185,7 @@ public class StudentService {
         }
     }
 
-    /**
-     * Gets the preferences for a student.
-     *
-     * @param studentId the student's database ID
-     * @return list of preferences ordered by rank
-     * @throws ServiceException if database error occurs
-     */
+    // load preferences for one student
     public List<Preference> getPreferences(int studentId) throws ServiceException {
         try {
             return preferenceDAO.findByStudent(studentId);
@@ -275,12 +194,7 @@ public class StudentService {
         }
     }
 
-    /**
-     * Validates a student object.
-     *
-     * @param student the student to validate
-     * @throws ServiceException if validation fails
-     */
+    // basic field-level validation
     private void validateStudent(Student student) throws ServiceException {
         if (student == null) {
             throw new ServiceException("Student cannot be null");

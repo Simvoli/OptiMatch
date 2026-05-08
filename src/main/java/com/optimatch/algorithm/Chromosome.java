@@ -3,14 +3,7 @@ package com.optimatch.algorithm;
 import java.util.Arrays;
 import java.util.Random;
 
-/**
- * Represents a chromosome in the genetic algorithm.
- * A chromosome encodes a complete assignment solution where:
- * - Index = student index (0 to numStudents-1)
- * - Value = project ID assigned to that student
- *
- * Example: assignments[3] = 5 means student at index 3 is assigned to project ID 5
- */
+// one candidate solution: index = student index, value = project id assigned to that student
 public class Chromosome implements Comparable<Chromosome> {
 
     private int[] assignments;
@@ -18,11 +11,7 @@ public class Chromosome implements Comparable<Chromosome> {
     private boolean fitnessCalculated;
     private boolean isValid;
 
-    /**
-     * Creates an empty chromosome with the specified size.
-     *
-     * @param numStudents the number of students (chromosome length)
-     */
+    // empty chromosome of given size
     public Chromosome(int numStudents) {
         this.assignments = new int[numStudents];
         this.fitness = 0.0;
@@ -30,11 +19,7 @@ public class Chromosome implements Comparable<Chromosome> {
         this.isValid = false;
     }
 
-    /**
-     * Creates a chromosome with the given assignments.
-     *
-     * @param assignments array where index = student index, value = project ID
-     */
+    // chromosome built from a ready array
     public Chromosome(int[] assignments) {
         this.assignments = Arrays.copyOf(assignments, assignments.length);
         this.fitness = 0.0;
@@ -42,11 +27,7 @@ public class Chromosome implements Comparable<Chromosome> {
         this.isValid = false;
     }
 
-    /**
-     * Copy constructor - creates a deep copy of another chromosome.
-     *
-     * @param other the chromosome to copy
-     */
+    // deep copy
     public Chromosome(Chromosome other) {
         this.assignments = Arrays.copyOf(other.assignments, other.assignments.length);
         this.fitness = other.fitness;
@@ -54,14 +35,7 @@ public class Chromosome implements Comparable<Chromosome> {
         this.isValid = other.isValid;
     }
 
-    /**
-     * Creates a random chromosome by assigning each student to a random project.
-     *
-     * @param numStudents the number of students
-     * @param projectIds  array of available project IDs
-     * @param random      random number generator
-     * @return a new randomly initialized chromosome
-     */
+    // random assignment for each student
     public static Chromosome createRandom(int numStudents, int[] projectIds, Random random) {
         Chromosome chromosome = new Chromosome(numStudents);
         for (int i = 0; i < numStudents; i++) {
@@ -71,107 +45,60 @@ public class Chromosome implements Comparable<Chromosome> {
         return chromosome;
     }
 
-    /**
-     * Gets the number of students (chromosome length).
-     *
-     * @return the number of students
-     */
+    // number of students
     public int getLength() {
         return assignments.length;
     }
 
-    /**
-     * Gets the project ID assigned to a student.
-     *
-     * @param studentIndex the student's index
-     * @return the project ID assigned to the student
-     */
+    // project assigned to a single student
     public int getAssignment(int studentIndex) {
         return assignments[studentIndex];
     }
 
-    /**
-     * Sets the project ID for a student.
-     *
-     * @param studentIndex the student's index
-     * @param projectId    the project ID to assign
-     */
+    // change a student's assignment, fitness becomes stale
     public void setAssignment(int studentIndex, int projectId) {
         assignments[studentIndex] = projectId;
         invalidateFitness();
     }
 
-    /**
-     * Gets the entire assignments array.
-     *
-     * @return a copy of the assignments array
-     */
+    // copy of the full assignment array
     public int[] getAssignments() {
         return Arrays.copyOf(assignments, assignments.length);
     }
 
-    /**
-     * Gets the fitness value.
-     *
-     * @return the fitness value
-     */
+    // current fitness value (0 if not yet calculated)
     public double getFitness() {
         return fitness;
     }
 
-    /**
-     * Sets the fitness value.
-     *
-     * @param fitness the fitness value
-     */
+    // store calculated fitness
     public void setFitness(double fitness) {
         this.fitness = fitness;
         this.fitnessCalculated = true;
     }
 
-    /**
-     * Checks if fitness has been calculated.
-     *
-     * @return true if fitness is up to date
-     */
+    // true if fitness is up to date
     public boolean isFitnessCalculated() {
         return fitnessCalculated;
     }
 
-    /**
-     * Invalidates the cached fitness value.
-     * Should be called after any modification to assignments.
-     */
+    // mark fitness as stale after edit
     public void invalidateFitness() {
         this.fitnessCalculated = false;
         this.fitness = 0.0;
     }
 
-    /**
-     * Checks if the chromosome represents a valid solution.
-     *
-     * @return true if all constraints are satisfied
-     */
+    // true if all constraints pass
     public boolean isValid() {
         return isValid;
     }
 
-    /**
-     * Sets the validity status.
-     *
-     * @param valid true if all constraints are satisfied
-     */
+    // store validity flag
     public void setValid(boolean valid) {
         this.isValid = valid;
     }
 
-    /**
-     * Swaps the assignments of two students.
-     * Used in mutation operations.
-     *
-     * @param studentIndex1 first student's index
-     * @param studentIndex2 second student's index
-     */
+    // swap projects of two students (used by mutation)
     public void swapAssignments(int studentIndex1, int studentIndex2) {
         int temp = assignments[studentIndex1];
         assignments[studentIndex1] = assignments[studentIndex2];
@@ -179,12 +106,7 @@ public class Chromosome implements Comparable<Chromosome> {
         invalidateFitness();
     }
 
-    /**
-     * Counts how many students are assigned to a specific project.
-     *
-     * @param projectId the project ID
-     * @return the number of students assigned to this project
-     */
+    // how many students sit on this project
     public int countStudentsInProject(int projectId) {
         int count = 0;
         for (int assignment : assignments) {
@@ -195,12 +117,7 @@ public class Chromosome implements Comparable<Chromosome> {
         return count;
     }
 
-    /**
-     * Gets all student indices assigned to a specific project.
-     *
-     * @param projectId the project ID
-     * @return array of student indices assigned to this project
-     */
+    // student indices currently on this project
     public int[] getStudentsInProject(int projectId) {
         int count = countStudentsInProject(projectId);
         int[] students = new int[count];
@@ -213,24 +130,13 @@ public class Chromosome implements Comparable<Chromosome> {
         return students;
     }
 
-    /**
-     * Compares chromosomes by fitness (higher fitness = better).
-     * Used for sorting populations.
-     *
-     * @param other the chromosome to compare to
-     * @return negative if this is better, positive if other is better
-     */
+    // higher fitness wins, so we reverse the natural order
     @Override
     public int compareTo(Chromosome other) {
-        // Higher fitness is better, so reverse the comparison
         return Double.compare(other.fitness, this.fitness);
     }
 
-    /**
-     * Creates a deep copy of this chromosome.
-     *
-     * @return a new chromosome with the same assignments and fitness
-     */
+    // deep copy via copy constructor
     public Chromosome copy() {
         return new Chromosome(this);
     }

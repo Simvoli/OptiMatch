@@ -11,9 +11,7 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Data Access Object for the {@code assignments} table.
- */
+// CRUD for the assignments table
 public class AssignmentDAO {
 
     private static final String INSERT_SQL =
@@ -21,6 +19,7 @@ public class AssignmentDAO {
     private static final String SELECT_BY_RUN_SQL =
             "SELECT id, run_id, student_id, project_id, preference_rank FROM assignments WHERE run_id = ?";
 
+    // batch insert, generated ids written back into the list
     public void insertBatch(List<Assignment> assignments) throws SQLException {
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(INSERT_SQL, Statement.RETURN_GENERATED_KEYS)) {
@@ -49,6 +48,7 @@ public class AssignmentDAO {
         }
     }
 
+    // load all assignments for a given run
     public List<Assignment> findByRun(int runId) throws SQLException {
         List<Assignment> assignments = new ArrayList<>();
         try (Connection conn = DatabaseConnection.getConnection();
@@ -64,6 +64,7 @@ public class AssignmentDAO {
         return assignments;
     }
 
+    // row -> Assignment
     private Assignment mapResultSetToAssignment(ResultSet rs) throws SQLException {
         Assignment assignment = new Assignment();
         assignment.setId(rs.getInt("id"));

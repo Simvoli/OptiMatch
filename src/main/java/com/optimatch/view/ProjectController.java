@@ -6,9 +6,7 @@ import javafx.beans.binding.Bindings;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 
-/**
- * Controller for the Project management screen.
- */
+// FXML controller for the projects screen
 public class ProjectController {
 
     @FXML private TextField searchField;
@@ -35,6 +33,7 @@ public class ProjectController {
 
     private ProjectViewModel viewModel;
 
+    // FXML init
     @FXML
     public void initialize() {
         viewModel = new ProjectViewModel();
@@ -44,11 +43,8 @@ public class ProjectController {
         setupBindings();
     }
 
-    /**
-     * Sets up the project table columns and data.
-     */
+    // configure table columns and selection listener
     private void setupTable() {
-        // Configure columns
         colCode.setCellValueFactory(cellData ->
                 Bindings.createStringBinding(() -> cellData.getValue().getCode()));
 
@@ -75,47 +71,36 @@ public class ProjectController {
             }
         });
 
-        // Set data
         projectTable.setItems(viewModel.getFilteredProjects());
 
-        // Selection listener
         projectTable.getSelectionModel().selectedItemProperty().addListener(
                 (obs, oldVal, newVal) -> viewModel.loadProjectToForm(newVal));
     }
 
-    /**
-     * Sets up the form controls.
-     */
+    // configure spinners
     private void setupForm() {
-        // Min Capacity Spinner (1-100)
         SpinnerValueFactory<Integer> minFactory =
                 new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 100, 1, 1);
         minCapacitySpinner.setValueFactory(minFactory);
 
-        // Max Capacity Spinner (1-100)
         SpinnerValueFactory<Integer> maxFactory =
                 new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 100, 10, 1);
         maxCapacitySpinner.setValueFactory(maxFactory);
 
-        // Required GPA Spinner (0.0-4.0)
         SpinnerValueFactory<Double> gpaFactory =
                 new SpinnerValueFactory.DoubleSpinnerValueFactory(0.0, 4.0, 0.0, 0.1);
         requiredGpaSpinner.setValueFactory(gpaFactory);
     }
 
-    /**
-     * Sets up data bindings between view and view model.
-     */
+    // wire form fields to view model properties
     private void setupBindings() {
-        // Search field
         searchField.textProperty().bindBidirectional(viewModel.searchTextProperty());
 
-        // Form fields
         codeField.textProperty().bindBidirectional(viewModel.codeProperty());
         nameField.textProperty().bindBidirectional(viewModel.nameProperty());
         descriptionArea.textProperty().bindBidirectional(viewModel.descriptionProperty());
 
-        // Min Capacity binding
+        // min capacity manual two-way binding
         minCapacitySpinner.getValueFactory().valueProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal != null) {
                 viewModel.minCapacityProperty().set(newVal);
@@ -125,7 +110,7 @@ public class ProjectController {
             minCapacitySpinner.getValueFactory().setValue(newVal.intValue());
         });
 
-        // Max Capacity binding
+        // max capacity manual two-way binding
         maxCapacitySpinner.getValueFactory().valueProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal != null) {
                 viewModel.maxCapacityProperty().set(newVal);
@@ -135,7 +120,7 @@ public class ProjectController {
             maxCapacitySpinner.getValueFactory().setValue(newVal.intValue());
         });
 
-        // Required GPA binding
+        // required gpa manual two-way binding
         requiredGpaSpinner.getValueFactory().valueProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal != null) {
                 viewModel.requiredGpaProperty().set(newVal);
@@ -145,10 +130,9 @@ public class ProjectController {
             requiredGpaSpinner.getValueFactory().setValue(newVal.doubleValue());
         });
 
-        // Status message
         statusLabel.textProperty().bind(viewModel.statusMessageProperty());
 
-        // Edit mode bindings
+        // swap labels and buttons when entering/leaving edit mode
         viewModel.editModeProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal) {
                 formTitle.setText("Edit Project");
@@ -165,16 +149,13 @@ public class ProjectController {
             }
         });
 
-        // Count and capacity labels
         viewModel.getFilteredProjects().addListener(
                 (javafx.collections.ListChangeListener<Project>) c -> updateLabels());
         viewModel.totalCapacityProperty().addListener((obs, oldVal, newVal) -> updateLabels());
         updateLabels();
     }
 
-    /**
-     * Updates the project count and capacity labels.
-     */
+    // refresh count and capacity labels
     private void updateLabels() {
         int filtered = viewModel.getFilteredProjects().size();
         int total = viewModel.getProjects().size();
@@ -191,6 +172,7 @@ public class ProjectController {
 
     // ==================== Action Handlers ====================
 
+    // start a fresh project form
     @FXML
     public void newProject() {
         viewModel.clearForm();
@@ -198,22 +180,26 @@ public class ProjectController {
         codeField.requestFocus();
     }
 
+    // reload from db
     @FXML
     public void refresh() {
         viewModel.refresh();
     }
 
+    // clear the search box
     @FXML
     public void clearSearch() {
         searchField.clear();
     }
 
+    // wipe the form
     @FXML
     public void clearForm() {
         viewModel.clearForm();
         projectTable.getSelectionModel().clearSelection();
     }
 
+    // save (create or update)
     @FXML
     public void saveProject() {
         if (viewModel.save()) {
@@ -221,6 +207,7 @@ public class ProjectController {
         }
     }
 
+    // delete the selected project after confirmation
     @FXML
     public void deleteProject() {
         Project selected = projectTable.getSelectionModel().getSelectedItem();
@@ -228,7 +215,6 @@ public class ProjectController {
             return;
         }
 
-        // Confirmation dialog
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Delete Project");
         alert.setHeaderText("Delete " + selected.getName() + "?");

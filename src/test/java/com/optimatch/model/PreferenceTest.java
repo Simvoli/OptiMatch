@@ -6,9 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Unit tests for the Preference model class.
- */
+// unit tests for Preference
 @DisplayName("Preference Model Tests")
 class PreferenceTest {
 

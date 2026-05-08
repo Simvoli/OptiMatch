@@ -2,10 +2,7 @@ package com.optimatch.model;
 
 import java.util.Objects;
 
-/**
- * Represents a project/course that students can be assigned to.
- * Each project has capacity constraints and may require a minimum GPA.
- */
+// project record: capacity range and optional gpa requirement
 public class Project {
 
     private int id;
@@ -16,25 +13,13 @@ public class Project {
     private int maxCapacity;
     private double requiredGpa;
 
-    /**
-     * Default constructor for Project.
-     */
+    // empty project with sane defaults
     public Project() {
         this.minCapacity = 1;
         this.requiredGpa = 0.00;
     }
 
-    /**
-     * Creates a new Project with the specified details.
-     *
-     * @param id          the database ID
-     * @param code        the project code
-     * @param name        the project name
-     * @param description the project description
-     * @param minCapacity the minimum number of students required
-     * @param maxCapacity the maximum number of students allowed
-     * @param requiredGpa the minimum GPA required for this project
-     */
+    // full project
     public Project(int id, String code, String name, String description,
                    int minCapacity, int maxCapacity, double requiredGpa) {
         this.id = id;
@@ -46,93 +31,52 @@ public class Project {
         setRequiredGpa(requiredGpa);
     }
 
-    /**
-     * Gets the database ID.
-     *
-     * @return the database ID
-     */
+    // db id
     public int getId() {
         return id;
     }
 
-    /**
-     * Sets the database ID.
-     *
-     * @param id the database ID
-     */
+    // set db id
     public void setId(int id) {
         this.id = id;
     }
 
-    /**
-     * Gets the project code.
-     *
-     * @return the project code
-     */
+    // short project code
     public String getCode() {
         return code;
     }
 
-    /**
-     * Sets the project code.
-     *
-     * @param code the project code
-     */
+    // set short project code
     public void setCode(String code) {
         this.code = code;
     }
 
-    /**
-     * Gets the project name.
-     *
-     * @return the project name
-     */
+    // display name
     public String getName() {
         return name;
     }
 
-    /**
-     * Sets the project name.
-     *
-     * @param name the project name
-     */
+    // set display name
     public void setName(String name) {
         this.name = name;
     }
 
-    /**
-     * Gets the project description.
-     *
-     * @return the description
-     */
+    // long description (may be null)
     public String getDescription() {
         return description;
     }
 
-    /**
-     * Sets the project description.
-     *
-     * @param description the description
-     */
+    // set description
     public void setDescription(String description) {
         this.description = description;
     }
 
-    /**
-     * Gets the minimum capacity.
-     *
-     * @return the minimum number of students required
-     */
+    // minimum students
     public int getMinCapacity() {
         return minCapacity;
     }
 
-    /**
-     * Sets the minimum capacity.
-     *
-     * @param minCapacity the minimum number of students required (must be &gt;= 0)
-     * @throws IllegalArgumentException if negative
-     */
+    // set minimum students, must be >= 0
     public void setMinCapacity(int minCapacity) {
         if (minCapacity < 0) {
             throw new IllegalArgumentException("Minimum capacity cannot be negative: " + minCapacity);
@@ -140,21 +84,12 @@ public class Project {
         this.minCapacity = minCapacity;
     }
 
-    /**
-     * Gets the maximum capacity.
-     *
-     * @return the maximum number of students allowed
-     */
+    // maximum students
     public int getMaxCapacity() {
         return maxCapacity;
     }
 
-    /**
-     * Sets the maximum capacity.
-     *
-     * @param maxCapacity the maximum number of students allowed (must be &gt;= 1)
-     * @throws IllegalArgumentException if less than 1
-     */
+    // set maximum students, must be >= 1
     public void setMaxCapacity(int maxCapacity) {
         if (maxCapacity < 1) {
             throw new IllegalArgumentException("Maximum capacity must be at least 1: " + maxCapacity);
@@ -162,21 +97,12 @@ public class Project {
         this.maxCapacity = maxCapacity;
     }
 
-    /**
-     * Gets the required GPA.
-     *
-     * @return the minimum GPA required
-     */
+    // required gpa (0 means no requirement)
     public double getRequiredGpa() {
         return requiredGpa;
     }
 
-    /**
-     * Sets the required GPA.
-     *
-     * @param requiredGpa the minimum GPA required (0.0 to 4.0)
-     * @throws IllegalArgumentException if outside [0.0, 4.0]
-     */
+    // set required gpa, must be in [0, 4]
     public void setRequiredGpa(double requiredGpa) {
         if (requiredGpa < 0.0 || requiredGpa > 4.0) {
             throw new IllegalArgumentException("Required GPA must be between 0.0 and 4.0: " + requiredGpa);
@@ -184,22 +110,12 @@ public class Project {
         this.requiredGpa = requiredGpa;
     }
 
-    /**
-     * Checks if the given count of students is within the valid capacity range.
-     *
-     * @param count the number of students
-     * @return true if count is between minCapacity and maxCapacity (inclusive)
-     */
+    // is the count between min and max inclusive
     public boolean isWithinCapacity(int count) {
         return count >= minCapacity && count <= maxCapacity;
     }
 
-    /**
-     * Checks if a student's GPA meets the project requirement.
-     *
-     * @param studentGpa the student's GPA
-     * @return true if the GPA meets or exceeds the requirement
-     */
+    // does the student's gpa meet the requirement
     public boolean meetsGpaRequirement(double studentGpa) {
         return studentGpa >= requiredGpa;
     }

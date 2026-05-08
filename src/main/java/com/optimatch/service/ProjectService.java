@@ -7,42 +7,21 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Service layer for project management.
- * Handles business logic for project operations including capacity validation.
- */
+// project business logic: validation, totals
 public class ProjectService {
 
     private final ProjectDAO projectDAO;
 
-    /**
-     * Creates a ProjectService with default DAO.
-     */
+    // wires up default DAO
     public ProjectService() {
         this.projectDAO = new ProjectDAO();
     }
 
-    /**
-     * Creates a ProjectService with the specified DAO.
-     *
-     * @param projectDAO the project DAO
-     */
-    public ProjectService(ProjectDAO projectDAO) {
-        this.projectDAO = projectDAO;
-    }
-
-    /**
-     * Creates a new project.
-     *
-     * @param project the project to create
-     * @return the created project with generated ID
-     * @throws ServiceException if validation fails or database error occurs
-     */
+    // create a new project (rejects duplicate code)
     public Project createProject(Project project) throws ServiceException {
         validateProject(project);
 
         try {
-            // Check for duplicate code
             Optional<Project> existing = projectDAO.findByCode(project.getCode());
             if (existing.isPresent()) {
                 throw new ServiceException("Project with code " + project.getCode() + " already exists");
@@ -55,13 +34,7 @@ public class ProjectService {
         }
     }
 
-    /**
-     * Updates an existing project.
-     *
-     * @param project the project to update
-     * @return true if update was successful
-     * @throws ServiceException if validation fails or database error occurs
-     */
+    // update an existing project
     public boolean updateProject(Project project) throws ServiceException {
         validateProject(project);
 
@@ -72,13 +45,7 @@ public class ProjectService {
         }
     }
 
-    /**
-     * Deletes a project.
-     *
-     * @param projectId the database ID of the project to delete
-     * @return true if deletion was successful
-     * @throws ServiceException if database error occurs
-     */
+    // delete a project
     public boolean deleteProject(int projectId) throws ServiceException {
         try {
             return projectDAO.delete(projectId);
@@ -87,12 +54,7 @@ public class ProjectService {
         }
     }
 
-    /**
-     * Gets all projects.
-     *
-     * @return list of all projects
-     * @throws ServiceException if database error occurs
-     */
+    // load all projects
     public List<Project> getAllProjects() throws ServiceException {
         try {
             return projectDAO.findAll();
@@ -101,12 +63,7 @@ public class ProjectService {
         }
     }
 
-    /**
-     * Gets the total number of projects.
-     *
-     * @return the count of projects
-     * @throws ServiceException if database error occurs
-     */
+    // total project count
     public int getProjectCount() throws ServiceException {
         try {
             return projectDAO.count();
@@ -115,12 +72,7 @@ public class ProjectService {
         }
     }
 
-    /**
-     * Calculates the total capacity across all projects.
-     *
-     * @return the sum of all project max capacities
-     * @throws ServiceException if database error occurs
-     */
+    // sum of max capacities across all projects
     public int getTotalCapacity() throws ServiceException {
         List<Project> projects = getAllProjects();
         return projects.stream()
@@ -128,12 +80,7 @@ public class ProjectService {
                 .sum();
     }
 
-    /**
-     * Calculates the minimum required students to fill all projects.
-     *
-     * @return the sum of all project min capacities
-     * @throws ServiceException if database error occurs
-     */
+    // sum of min capacities across all projects
     public int getMinimumRequiredStudents() throws ServiceException {
         List<Project> projects = getAllProjects();
         return projects.stream()
@@ -141,12 +88,7 @@ public class ProjectService {
                 .sum();
     }
 
-    /**
-     * Validates a project object.
-     *
-     * @param project the project to validate
-     * @throws ServiceException if validation fails
-     */
+    // basic field-level validation
     private void validateProject(Project project) throws ServiceException {
         if (project == null) {
             throw new ServiceException("Project cannot be null");

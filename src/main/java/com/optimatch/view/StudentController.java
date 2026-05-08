@@ -8,9 +8,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.util.StringConverter;
 
-/**
- * Controller for the Student management screen.
- */
+// FXML controller for the students screen
 public class StudentController {
 
     @FXML private TextField searchField;
@@ -42,6 +40,7 @@ public class StudentController {
 
     private StudentViewModel viewModel;
 
+    // FXML init
     @FXML
     public void initialize() {
         viewModel = new StudentViewModel();
@@ -51,11 +50,8 @@ public class StudentController {
         setupBindings();
     }
 
-    /**
-     * Sets up the student table columns and data.
-     */
+    // configure table columns and selection listener
     private void setupTable() {
-        // Configure columns
         colStudentId.setCellValueFactory(cellData ->
                 Bindings.createStringBinding(() -> cellData.getValue().getStudentId()));
 
@@ -80,24 +76,18 @@ public class StudentController {
                 Bindings.createStringBinding(() ->
                         cellData.getValue().hasPartner() ? "Yes" : ""));
 
-        // Set data
         studentTable.setItems(viewModel.getFilteredStudents());
 
-        // Selection listener
         studentTable.getSelectionModel().selectedItemProperty().addListener(
                 (obs, oldVal, newVal) -> viewModel.loadStudentToForm(newVal));
     }
 
-    /**
-     * Sets up the form controls.
-     */
+    // configure spinners and combo boxes
     private void setupForm() {
-        // GPA Spinner
         SpinnerValueFactory<Double> gpaFactory =
                 new SpinnerValueFactory.DoubleSpinnerValueFactory(0.0, 4.0, 0.0, 0.1);
         gpaSpinner.setValueFactory(gpaFactory);
 
-        // Partner ComboBox
         partnerCombo.setItems(viewModel.getAvailablePartners());
         partnerCombo.setConverter(new StringConverter<>() {
             @Override
@@ -111,7 +101,6 @@ public class StudentController {
             }
         });
 
-        // Project ComboBoxes
         setupProjectCombo(pref1Combo);
         setupProjectCombo(pref2Combo);
         setupProjectCombo(pref3Combo);
@@ -119,9 +108,7 @@ public class StudentController {
         setupProjectCombo(pref5Combo);
     }
 
-    /**
-     * Sets up a project ComboBox.
-     */
+    // shared setup for project preference combos
     private void setupProjectCombo(ComboBox<Project> combo) {
         combo.setItems(viewModel.getProjects());
         combo.setConverter(new StringConverter<>() {
@@ -137,19 +124,15 @@ public class StudentController {
         });
     }
 
-    /**
-     * Sets up data bindings between view and view model.
-     */
+    // wire form fields to view model properties
     private void setupBindings() {
-        // Search field
         searchField.textProperty().bindBidirectional(viewModel.searchTextProperty());
 
-        // Form fields
         studentIdField.textProperty().bindBidirectional(viewModel.studentIdProperty());
         nameField.textProperty().bindBidirectional(viewModel.nameProperty());
         emailField.textProperty().bindBidirectional(viewModel.emailProperty());
 
-        // GPA binding
+        // gpa spinner needs manual two-way binding
         gpaSpinner.getValueFactory().valueProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal != null) {
                 viewModel.gpaProperty().set(newVal);
@@ -159,20 +142,17 @@ public class StudentController {
             gpaSpinner.getValueFactory().setValue(newVal.doubleValue());
         });
 
-        // Partner binding
         partnerCombo.valueProperty().bindBidirectional(viewModel.selectedPartnerProperty());
 
-        // Preference bindings
         pref1Combo.valueProperty().bindBidirectional(viewModel.preference1Property());
         pref2Combo.valueProperty().bindBidirectional(viewModel.preference2Property());
         pref3Combo.valueProperty().bindBidirectional(viewModel.preference3Property());
         pref4Combo.valueProperty().bindBidirectional(viewModel.preference4Property());
         pref5Combo.valueProperty().bindBidirectional(viewModel.preference5Property());
 
-        // Status message
         statusLabel.textProperty().bind(viewModel.statusMessageProperty());
 
-        // Edit mode bindings
+        // swap labels and buttons when entering/leaving edit mode
         viewModel.editModeProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal) {
                 formTitle.setText("Edit Student");
@@ -185,16 +165,13 @@ public class StudentController {
             }
         });
 
-        // Count label
         viewModel.getFilteredStudents().addListener(
                 (javafx.collections.ListChangeListener<Student>) c ->
                         updateCountLabel());
         updateCountLabel();
     }
 
-    /**
-     * Updates the student count label.
-     */
+    // refresh "X of Y students" label
     private void updateCountLabel() {
         int filtered = viewModel.getFilteredStudents().size();
         int total = viewModel.getStudents().size();
@@ -207,6 +184,7 @@ public class StudentController {
 
     // ==================== Action Handlers ====================
 
+    // start a fresh student form
     @FXML
     public void newStudent() {
         viewModel.clearForm();
@@ -214,27 +192,32 @@ public class StudentController {
         studentIdField.requestFocus();
     }
 
+    // reload from db
     @FXML
     public void refresh() {
         viewModel.refresh();
     }
 
+    // clear the search box
     @FXML
     public void clearSearch() {
         searchField.clear();
     }
 
+    // wipe the form
     @FXML
     public void clearForm() {
         viewModel.clearForm();
         studentTable.getSelectionModel().clearSelection();
     }
 
+    // unset the partner combo
     @FXML
     public void clearPartner() {
         partnerCombo.setValue(null);
     }
 
+    // save (create or update)
     @FXML
     public void saveStudent() {
         if (viewModel.save()) {
@@ -242,6 +225,7 @@ public class StudentController {
         }
     }
 
+    // delete the selected student after confirmation
     @FXML
     public void deleteStudent() {
         Student selected = studentTable.getSelectionModel().getSelectedItem();
@@ -249,7 +233,6 @@ public class StudentController {
             return;
         }
 
-        // Confirmation dialog
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Delete Student");
         alert.setHeaderText("Delete " + selected.getName() + "?");

@@ -23,11 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Orchestrates one matching run: loads data, runs the GA, and persists
- * the algorithm run, the per-student assignments, and the per-generation
- * statistics.
- */
+// orchestrates one matching: load data, run GA, save run/assignments/stats
 public class MatchingService {
 
     private final StudentDAO studentDAO;
@@ -40,6 +36,7 @@ public class MatchingService {
     private GeneticAlgorithm currentAlgorithm;
     private GeneticAlgorithm.GenerationCallback progressCallback;
 
+    // wires up default DAOs
     public MatchingService() {
         this.studentDAO = new StudentDAO();
         this.projectDAO = new ProjectDAO();
@@ -49,6 +46,7 @@ public class MatchingService {
         this.generationStatsDAO = new GenerationStatsDAO();
     }
 
+    // load data, run the GA, persist everything, return the saved run
     public AlgorithmRun runMatching(GeneticAlgorithmConfig config) throws ServiceException {
         try {
             List<Student> students = studentDAO.findAll();
@@ -57,6 +55,8 @@ public class MatchingService {
 
             validateData(students, projects);
 
+            // RU: GA внутри использует индексы 0..N-1, а в БД у студентов реальные id,
+            // поэтому держим карту индекс -> studentId
             Map<Integer, Integer> indexToStudentId = new HashMap<>();
             for (int i = 0; i < students.size(); i++) {
                 indexToStudentId.put(i, students.get(i).getId());
@@ -77,6 +77,7 @@ public class MatchingService {
                     run.getId(), bestSolution, indexToStudentId, preferences);
             assignmentDAO.insertBatch(assignments);
 
+            // attach run id to each generation stats row before insert
             List<GenerationStats> generationStats = algorithmResult.getHistory();
             for (GenerationStats stats : generationStats) {
                 stats.setRunId(run.getId());
@@ -89,16 +90,19 @@ public class MatchingService {
         }
     }
 
+    // request a graceful stop on the running GA
     public void stopMatching() {
         if (currentAlgorithm != null && currentAlgorithm.isRunning()) {
             currentAlgorithm.stop();
         }
     }
 
+    // register a callback for live progress updates
     public void setProgressCallback(GeneticAlgorithm.GenerationCallback callback) {
         this.progressCallback = callback;
     }
 
+    // load all past runs newest first
     public List<AlgorithmRun> getAllRuns() throws ServiceException {
         try {
             return algorithmRunDAO.findAll();
@@ -107,6 +111,7 @@ public class MatchingService {
         }
     }
 
+    // load per-generation stats for one run
     public List<GenerationStats> getGenerationStatsForRun(int runId) throws ServiceException {
         try {
             return generationStatsDAO.findByRun(runId);
@@ -115,10 +120,7 @@ public class MatchingService {
         }
     }
 
-    /**
-     * Deletes an algorithm run. Assignments and generation statistics are
-     * removed automatically via ON DELETE CASCADE constraints in the schema.
-     */
+    // delete a run; assignments and stats fall via ON DELETE CASCADE
     public boolean deleteRun(int runId) throws ServiceException {
         try {
             return algorithmRunDAO.delete(runId);
@@ -127,6 +129,7 @@ public class MatchingService {
         }
     }
 
+    // sanity checks before kicking off the GA
     private void validateData(List<Student> students, List<Project> projects) throws ServiceException {
         if (students.isEmpty()) {
             throw new ServiceException("No students found. Please add students before running the algorithm.");
@@ -144,6 +147,7 @@ public class MatchingService {
         }
     }
 
+    // build the AlgorithmRun row from config + result
     private AlgorithmRun createAlgorithmRun(GeneticAlgorithmConfig config,
                                             GeneticAlgorithm.AlgorithmResult result) {
         AlgorithmRun run = new AlgorithmRun();
@@ -157,9 +161,11 @@ public class MatchingService {
         return run;
     }
 
+    // turn the chromosome into Assignment rows, including preference rank if any
     private List<Assignment> createAssignments(int runId, Chromosome chromosome,
                                                Map<Integer, Integer> indexToStudentId,
                                                List<Preference> preferences) {
+        // composite key "studentId-projectId" -> rank
         Map<String, Integer> preferenceRankMap = new HashMap<>();
         for (Preference pref : preferences) {
             preferenceRankMap.put(pref.getStudentId() + "-" + pref.getProjectId(), pref.getRank());

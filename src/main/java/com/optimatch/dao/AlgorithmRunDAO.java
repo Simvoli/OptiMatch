@@ -11,9 +11,7 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Data Access Object for the {@code algorithm_runs} table.
- */
+// CRUD for the algorithm_runs table
 public class AlgorithmRunDAO {
 
     private static final String INSERT_SQL =
@@ -26,6 +24,7 @@ public class AlgorithmRunDAO {
             "SELECT id, run_timestamp, population_size, generations, mutation_rate, " +
                     "crossover_rate, best_fitness, execution_time_ms FROM algorithm_runs ORDER BY run_timestamp DESC";
 
+    // insert and assign generated id back to the entity
     public int insert(AlgorithmRun run) throws SQLException {
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(INSERT_SQL, Statement.RETURN_GENERATED_KEYS)) {
@@ -51,6 +50,7 @@ public class AlgorithmRunDAO {
         }
     }
 
+    // delete by db id (cascade removes assignments and stats via schema FKs)
     public boolean delete(int id) throws SQLException {
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(DELETE_SQL)) {
@@ -59,6 +59,7 @@ public class AlgorithmRunDAO {
         }
     }
 
+    // load all runs newest first
     public List<AlgorithmRun> findAll() throws SQLException {
         List<AlgorithmRun> runs = new ArrayList<>();
         try (Connection conn = DatabaseConnection.getConnection();
@@ -71,6 +72,7 @@ public class AlgorithmRunDAO {
         return runs;
     }
 
+    // row -> AlgorithmRun
     private AlgorithmRun mapResultSetToAlgorithmRun(ResultSet rs) throws SQLException {
         AlgorithmRun run = new AlgorithmRun();
         run.setId(rs.getInt("id"));
