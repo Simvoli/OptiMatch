@@ -43,7 +43,7 @@ class ExportUtilTest {
                 200, 1000, 0.02, 0.8, 450.5, 5000);
 
         int[] distribution = {1, 5, 2, 1, 1, 0};
-        summary = new MatchingSummary(1, 10, 3, 10, distribution, 800, 80.0);
+        summary = new MatchingSummary(10, 3, distribution, 80.0);
 
         // Student details
         Student alice = new Student(1, "S001", "Alice Smith", "alice@test.com", 3.5, null);

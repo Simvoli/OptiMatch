@@ -30,7 +30,7 @@ The project is built around a clean MVVM architecture with a clear separation be
 
 ## Problem Statement
 
-Given a set of students, a set of projects, and each student's ranked preferences, assign every student to exactly one project so that the overall satisfaction is maximized while satisfying the following constraints:
+Given a set of students, a set of projects, and each student's ranked preferences, assign every student to exactly one project so that overall satisfaction is maximized while satisfying the following constraints:
 
 - **Capacity** — each project must have between `min_capacity` and `max_capacity` students.
 - **GPA** — a student can only be assigned to a project if their GPA meets the project's `required_gpa`.
@@ -46,9 +46,10 @@ This is an **NP-hard** problem: with `N` students and `M` projects, the search s
 - Live progress tracking during a run — current generation, best fitness, average fitness, elapsed time
 - Persistent run history — every algorithm run, its parameters, its assignments, and its per-generation statistics are saved to the database
 - Detailed results view with preference distribution (1st through 5th choice + unmatched), per-student assignment, per-project capacity status, and convergence curve
-- Export to CSV and a human-readable text report
+- Export to CSV (UTF-8 with BOM, opens correctly in Excel) and a human-readable text report
 - Reproducible runs via configurable random seed
-- Comprehensive JUnit 5 test suite (unit + integration)
+- Optional right-to-left UI orientation for Hebrew users (`-Doptimatch.orientation=rtl`)
+- Comprehensive JUnit 5 test suite (unit + integration), ~190 tests
 
 ## Tech Stack
 
@@ -103,7 +104,7 @@ OptiMatch follows a layered MVVM architecture. Each layer has a single, clear re
                                   └───────────┘
 ```
 
-**Why MVVM?** ViewModels expose JavaFX `Property` objects that the FXML controllers bind to, so the UI updates automatically whenever model state changes. The algorithm runs on a dedicated daemon thread; UI updates are marshalled back to the JavaFX Application Thread via `Platform.runLater`, keeping the interface responsive even during long runs.
+**Why MVVM?** ViewModels expose JavaFX `Property` objects that the FXML controllers bind to, so the UI updates automatically whenever model state changes. The algorithm runs on a shared daemon executor (`AppLifecycle.getBackgroundExecutor()`); UI updates are marshalled back to the JavaFX Application Thread via `Platform.runLater`, keeping the interface responsive even during long runs. On application exit, `App.stop()` invokes `AppLifecycle.shutdown()` and `DatabaseConnection.closeConnection()` to release every long-lived resource cleanly.
 
 ## Genetic Algorithm
 
@@ -137,21 +138,21 @@ The theoretical maximum fitness is `N × 100` — every student getting their fi
 1. **Initialization** — generate a random population (default size: 200).
 2. **Evaluation** — compute fitness for every chromosome.
 3. **Elitism** — copy the top 5% (configurable) directly into the next generation.
-4. **Selection** — tournament selection (default size: 3) picks parents for reproduction.
+4. **Selection** — tournament selection picks parents (default tournament size: 3, ties broken randomly).
 5. **Crossover** — uniform crossover mixes parent genes (default rate: 0.8).
-6. **Mutation** — swap mutation perturbs offspring (default rate: 0.02).
-7. **Repair** — `ConstraintChecker` repairs partner, GPA, and capacity violations, ensuring offspring remain feasible.
+6. **Mutation** — per-gene swap mutation perturbs offspring; the configured rate is the probability that **each individual gene** is swapped with another random gene (default 0.02 per gene).
+7. **Repair** — `ConstraintChecker` repairs partner, GPA, and capacity violations using a preference-aware strategy (it picks replacement projects from the affected student's own preference list before falling back to any feasible project).
 8. **Replacement** — assemble the new generation from elites and offspring.
 9. **Termination** — stop when (a) `maxGenerations` is reached, (b) convergence is detected (no improvement above threshold for `convergenceGenerations` consecutive generations), or (c) the user clicks Stop.
 
-### Operators Available
+### Operators
 
-| Operator     | Strategies                                                       |
-|--------------|------------------------------------------------------------------|
-| Selection    | Tournament *(default)*, Roulette Wheel, Rank-Based               |
-| Crossover    | Uniform *(default)*, Single-Point, Two-Point                     |
-| Mutation     | Swap *(default)*, Random Reset, Scramble, Inversion + Adaptive   |
-| Elitism      | 5%, 10%, fixed count, custom range                               |
+| Operator     | Implementation                                                    |
+|--------------|-------------------------------------------------------------------|
+| Selection    | Tournament (size configurable, default 3, random tie-break)       |
+| Crossover    | Uniform (each gene independently inherited from either parent)    |
+| Mutation     | Per-gene swap (each gene independently rolls against the rate)    |
+| Elitism      | Top *N*% of the sorted population, deep-copied into the next gen  |
 
 ### Reproducibility
 
@@ -161,7 +162,7 @@ The theoretical maximum fitness is `N × 100` — every student getting their fi
 
 ### Prerequisites
 
-- **JDK 17** or newer
+- **JDK 17** (newer JDKs work, but the project targets release 17)
 - **Apache Maven 3.8+**
 - **MySQL 8** (running locally or remotely)
 
@@ -195,13 +196,15 @@ mvn clean install
    mysql -u root -p optimatch < src/main/resources/sql/schema.sql
    ```
 
+   The schema creates six tables — `students`, `projects`, `preferences`, `algorithm_runs`, `assignments`, `generation_stats` — with cascading deletes from `algorithm_runs` so removing a run cleans up its assignments and generation history automatically.
+
 3. *(Optional)* Load test data — choose one:
 
    ```bash
-   # Small dataset: 30 students, 6 projects, 2 partner pairs
+   # Small dataset
    mysql -u root -p optimatch < src/main/resources/sql/test_data.sql
 
-   # Large dataset: 120 students, 15 projects, 5 partner pairs
+   # Large dataset
    mysql -u root -p optimatch < src/main/resources/sql/test_data_large.sql
    ```
 
@@ -217,7 +220,7 @@ mvn clean install
    db.password=YOUR_PASSWORD_HERE
    ```
 
-   `config.properties` is gitignored, so your credentials never end up in version control.
+   `config.properties` is gitignored, so your credentials never end up in version control. Each call to `DatabaseConnection.getConnection()` returns a fresh JDBC connection — callers own its lifecycle (`try-with-resources` is used everywhere in the DAO layer).
 
 ## Running the Application
 
@@ -225,7 +228,13 @@ mvn clean install
 mvn javafx:run
 ```
 
-This launches the OptiMatch desktop window (1200×800). The status bar at the bottom confirms whether the database connection succeeded.
+This launches the OptiMatch desktop window (1200×800, minimum 800×600). The status bar at the bottom confirms whether the database connection succeeded.
+
+To launch with a right-to-left UI for Hebrew users:
+
+```bash
+mvn javafx:run -Djavafx.args="-Doptimatch.orientation=rtl"
+```
 
 ## Using OptiMatch
 
@@ -240,7 +249,7 @@ OptiMatch presents four screens, navigable from the top bar:
    - Per-student assignments with their preference rank and satisfaction score
    - Per-project capacity status (OK / Under / Over)
    - Per-generation statistics (best, average, worst, std dev, valid count)
-   - Export to CSV (students, projects, generations) or full text report
+   - Export to CSV (students, projects, generation statistics) or full text report
 
 ## Configuration Presets
 
@@ -252,7 +261,7 @@ OptiMatch presents four screens, navigable from the top bar:
 | Quick        | 50         | 100         | 0.05     | 0.9       | 10%   | 3          | Smoke testing — runs in seconds   |
 | High Quality | 750        | 3000        | 0.025    | 0.85      | 10%   | 5          | Highest quality, longest runtime  |
 
-You can also tune every parameter manually in the Algorithm screen.
+Mutation and crossover rates are interpreted **per gene** and **per offspring**, respectively. You can also tune every parameter manually in the Algorithm screen.
 
 ## Project Structure
 
@@ -311,6 +320,7 @@ optimatch/
     │   │   │   ├── AlgorithmController.java
     │   │   │   └── ResultsController.java
     │   │   └── util/
+    │   │       ├── AppLifecycle.java          Shared executor + shutdown hooks
     │   │       └── ExportUtil.java            CSV / text report export
     │   └── resources/
     │       ├── config.properties.example
@@ -323,48 +333,56 @@ optimatch/
     │       │   └── results.fxml
     │       └── sql/
     │           ├── schema.sql
-    │           ├── test_data.sql              30 students, 6 projects
-    │           └── test_data_large.sql        120 students, 15 projects
+    │           ├── test_data.sql
+    │           └── test_data_large.sql
     └── test/java/com/optimatch/               JUnit 5 tests
         ├── algorithm/
-        │   ├── FitnessCalculatorTest.java
+        │   ├── ChromosomeTest.java
         │   ├── ConstraintCheckerTest.java
         │   ├── CrossoverOperatorTest.java
-        │   ├── SelectionOperatorTest.java
-        │   ├── MutationOperatorTest.java
+        │   ├── FitnessCalculatorTest.java
         │   ├── GeneticAlgorithmConfigTest.java
-        │   └── GeneticAlgorithmIntegrationTest.java
-        └── model/
-            ├── StudentTest.java
-            ├── ProjectTest.java
-            └── AssignmentTest.java
+        │   ├── GeneticAlgorithmIntegrationTest.java
+        │   ├── MutationOperatorTest.java
+        │   ├── PopulationTest.java
+        │   └── SelectionOperatorTest.java
+        ├── model/
+        │   ├── AlgorithmRunTest.java
+        │   ├── AssignmentTest.java
+        │   ├── PreferenceTest.java
+        │   ├── ProjectTest.java
+        │   └── StudentTest.java
+        └── util/
+            └── ExportUtilTest.java
 ```
 
 ## Testing
 
-The project ships with a comprehensive JUnit 5 test suite covering the algorithm core and the domain models. Tests are deterministic — they use fixed RNG seeds — so they're fully reproducible.
+The project ships with a comprehensive JUnit 5 test suite covering the algorithm core, the domain models, and the export utilities. Tests are deterministic — they use fixed RNG seeds — so they're fully reproducible.
 
 ```bash
 # Run all tests
 mvn test
 
 # Run a single test class
-mvn test -Dtest=FitnessCalculatorTest
+mvn test "-Dtest=FitnessCalculatorTest"
 
-# Run with a specific JVM-arg setup is already wired up in pom.xml
-# (Surefire opens the algorithm/model/util packages for reflection)
+# Run a single test method
+mvn test "-Dtest=FitnessCalculatorTest#allFirstChoices"
 ```
 
-The Maven Surefire plugin is preconfigured with the `--add-opens` flags required by the Java module system, so JUnit reflection-based discovery works out of the box.
+The Maven Surefire plugin is preconfigured with the `--add-opens` and `--add-reads` flags required by the Java module system, so JUnit reflection-based discovery works out of the box.
+
+> **Running tests from IntelliJ IDEA.** Because the project ships a `module-info.java`, IntelliJ's built-in test runner sometimes fails to find the `com.optimatch` module on the module path. The most reliable workaround is to create a **Maven** run configuration with the goal `test` (or `test "-Dtest=ClassName"`) instead of relying on the green-arrow JUnit runner. Make sure the Project SDK is set to JDK 17.
 
 ## Test Data
 
 Two SQL fixtures are provided to cover different demonstration scenarios:
 
-| Fixture                | Students | Projects | Capacity (min–max) | Partner pairs | Notes                                     |
-|------------------------|---------:|---------:|--------------------|--------------:|-------------------------------------------|
-| `test_data.sql`        | 30       | 6        | 18 – 36            | 2             | Quick demo, fast convergence              |
-| `test_data_large.sql`  | 120      | 15       | 95 – 145           | 5             | Stress test with deliberate GPA conflicts |
+| Fixture                | Purpose                                                                            |
+|------------------------|------------------------------------------------------------------------------------|
+| `test_data.sql`        | Quick demo dataset — handful of students and projects, fast convergence.           |
+| `test_data_large.sql`  | Stress-test dataset — more students and projects with deliberate GPA conflicts.    |
 
 The large dataset is designed to exercise the constraint solver: highly competitive projects (AI, SEC, QUANT) have strict GPA requirements and limited capacity, while medium-GPA students cluster around WEB, DATA, and BLOCK — forcing the algorithm to make meaningful trade-offs.
 

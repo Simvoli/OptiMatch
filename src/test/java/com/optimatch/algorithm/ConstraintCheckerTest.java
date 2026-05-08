@@ -192,63 +192,6 @@ class ConstraintCheckerTest {
     }
 
     @Nested
-    @DisplayName("Get Violations Tests")
-    class GetViolationsTests {
-
-        @Test
-        @DisplayName("getViolations returns no violations for valid chromosome")
-        void getViolationsNone() {
-            // Valid assignment: Dave (GPA 2.0) goes to P1 (no GPA requirement)
-            Chromosome c = new Chromosome(new int[]{1, 2, 1, 1, 3});
-
-            ConstraintChecker.ConstraintViolations violations = checker.getViolations(c);
-
-            assertFalse(violations.hasViolations());
-            assertEquals(0, violations.getTotalViolations());
-        }
-
-        @Test
-        @DisplayName("getViolations returns capacity violations")
-        void getViolationsCapacity() {
-            // All to P1 (over), none to P2, P3 (under)
-            Chromosome c = new Chromosome(new int[]{1, 1, 1, 1, 1});
-
-            ConstraintChecker.ConstraintViolations violations = checker.getViolations(c);
-
-            assertTrue(violations.hasViolations());
-            assertEquals(3, violations.getCapacityViolations().size()); // P1 over, P2 under, P3 under
-        }
-
-        @Test
-        @DisplayName("getViolations returns GPA violations")
-        void getViolationsGpa() {
-            // Dave (2.0) to P3 (requires 3.0)
-            Chromosome c = new Chromosome(new int[]{1, 2, 1, 3, 3});
-
-            ConstraintChecker.ConstraintViolations violations = checker.getViolations(c);
-
-            assertTrue(violations.hasViolations());
-            assertEquals(1, violations.getGpaViolations().size());
-        }
-
-        @Test
-        @DisplayName("getViolations returns partner violations")
-        void getViolationsPartner() {
-            students.get(0).setPartnerId(2);
-            students.get(1).setPartnerId(1);
-            checker = new ConstraintChecker(students, projects, random);
-
-            // Alice in P1, Bob in P2
-            Chromosome c = new Chromosome(new int[]{1, 2, 1, 2, 3});
-
-            ConstraintChecker.ConstraintViolations violations = checker.getViolations(c);
-
-            assertTrue(violations.hasViolations());
-            assertEquals(1, violations.getPartnerViolations().size());
-        }
-    }
-
-    @Nested
     @DisplayName("Repair Tests")
     class RepairTests {
 
@@ -327,48 +270,4 @@ class ConstraintCheckerTest {
         }
     }
 
-    @Nested
-    @DisplayName("Violation Classes Tests")
-    class ViolationClassesTests {
-
-        @Test
-        @DisplayName("CapacityViolation toString contains relevant info")
-        void capacityViolationToString() {
-            ConstraintChecker.CapacityViolation violation =
-                    new ConstraintChecker.CapacityViolation(1, 5, 1, 3, false);
-
-            String str = violation.toString();
-
-            assertTrue(str.contains("project=1"));
-            assertTrue(str.contains("actual=5"));
-            assertTrue(str.contains("OVER"));
-        }
-
-        @Test
-        @DisplayName("GpaViolation toString contains relevant info")
-        void gpaViolationToString() {
-            ConstraintChecker.GpaViolation violation =
-                    new ConstraintChecker.GpaViolation(1, 2, 2.0, 3.0);
-
-            String str = violation.toString();
-
-            assertTrue(str.contains("student=1"));
-            assertTrue(str.contains("project=2"));
-            // Use locale-agnostic checks (some locales use comma as decimal separator)
-            assertTrue(str.contains("studentGpa") || str.contains("2"));
-            assertTrue(str.contains("requiredGpa") || str.contains("3"));
-        }
-
-        @Test
-        @DisplayName("PartnerViolation toString contains relevant info")
-        void partnerViolationToString() {
-            ConstraintChecker.PartnerViolation violation =
-                    new ConstraintChecker.PartnerViolation(1, 2, 1, 2);
-
-            String str = violation.toString();
-
-            assertTrue(str.contains("student=1"));
-            assertTrue(str.contains("partner=2"));
-        }
-    }
 }

@@ -260,13 +260,4 @@ public class Chromosome implements Comparable<Chromosome> {
                 ", assignments=" + Arrays.toString(assignments) +
                 '}';
     }
-
-    /**
-     * Returns a compact string representation showing only fitness and validity.
-     *
-     * @return compact string
-     */
-    public String toShortString() {
-        return String.format("Chromosome[fitness=%.2f, valid=%s]", fitness, isValid);
-    }
 }

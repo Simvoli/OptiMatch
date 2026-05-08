@@ -118,21 +118,6 @@ public class StudentService {
     }
 
     /**
-     * Gets a student by institutional student ID.
-     *
-     * @param studentId the institutional student ID
-     * @return the student if found
-     * @throws ServiceException if database error occurs
-     */
-    public Optional<Student> getStudentByStudentId(String studentId) throws ServiceException {
-        try {
-            return studentDAO.findByStudentId(studentId);
-        } catch (SQLException e) {
-            throw new ServiceException("Failed to get student: " + e.getMessage(), e);
-        }
-    }
-
-    /**
      * Gets all students.
      *
      * @return list of all students

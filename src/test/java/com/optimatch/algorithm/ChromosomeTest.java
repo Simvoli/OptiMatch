@@ -295,16 +295,5 @@ class ChromosomeTest {
             assertTrue(str.contains("[1, 2, 3]"));
         }
 
-        @Test
-        @DisplayName("toShortString contains fitness and validity")
-        void toShortString() {
-            chromosome.setFitness(50.0);
-            chromosome.setValid(true);
-
-            String str = chromosome.toShortString();
-            // Use locale-agnostic checks
-            assertTrue(str.contains("fitness"));
-            assertTrue(str.contains("true"));
-        }
     }
 }

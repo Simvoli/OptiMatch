@@ -88,36 +88,6 @@ public class ProjectService {
     }
 
     /**
-     * Gets a project by database ID.
-     *
-     * @param id the database ID
-     * @return the project if found
-     * @throws ServiceException if database error occurs
-     */
-    public Optional<Project> getProjectById(int id) throws ServiceException {
-        try {
-            return projectDAO.findById(id);
-        } catch (SQLException e) {
-            throw new ServiceException("Failed to get project: " + e.getMessage(), e);
-        }
-    }
-
-    /**
-     * Gets a project by code.
-     *
-     * @param code the project code
-     * @return the project if found
-     * @throws ServiceException if database error occurs
-     */
-    public Optional<Project> getProjectByCode(String code) throws ServiceException {
-        try {
-            return projectDAO.findByCode(code);
-        } catch (SQLException e) {
-            throw new ServiceException("Failed to get project: " + e.getMessage(), e);
-        }
-    }
-
-    /**
      * Gets all projects.
      *
      * @return list of all projects
@@ -169,33 +139,6 @@ public class ProjectService {
         return projects.stream()
                 .mapToInt(Project::getMinCapacity)
                 .sum();
-    }
-
-    /**
-     * Checks if the number of students can be accommodated by the projects.
-     *
-     * @param studentCount the number of students
-     * @return true if student count is within total capacity range
-     * @throws ServiceException if database error occurs
-     */
-    public boolean canAccommodateStudents(int studentCount) throws ServiceException {
-        int minRequired = getMinimumRequiredStudents();
-        int maxCapacity = getTotalCapacity();
-        return studentCount >= minRequired && studentCount <= maxCapacity;
-    }
-
-    /**
-     * Gets projects that a student qualifies for based on GPA.
-     *
-     * @param studentGpa the student's GPA
-     * @return list of projects the student can be assigned to
-     * @throws ServiceException if database error occurs
-     */
-    public List<Project> getEligibleProjects(double studentGpa) throws ServiceException {
-        List<Project> allProjects = getAllProjects();
-        return allProjects.stream()
-                .filter(p -> p.meetsGpaRequirement(studentGpa))
-                .toList();
     }
 
     /**

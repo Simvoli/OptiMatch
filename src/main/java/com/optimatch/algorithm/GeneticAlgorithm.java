@@ -98,7 +98,6 @@ public class GeneticAlgorithm {
 
         this.mutationOperator = new MutationOperator(random);
         this.mutationOperator.setMutationRate(config.getMutationRate());
-        this.mutationOperator.setAvailableProjectIds(constraintChecker.getProjectIds());
 
         this.elitismOperator = new ElitismOperator(config.getElitePercentage());
 
@@ -263,16 +262,7 @@ public class GeneticAlgorithm {
         }
 
         // Check convergence
-        if (config.isConvergenceEnabled() && isConverged()) {
-            return true;
-        }
-
-        // Check target fitness
-        if (config.getTargetFitness() != null && bestEver.getFitness() >= config.getTargetFitness()) {
-            return true;
-        }
-
-        return false;
+        return config.isConvergenceEnabled() && isConverged();
     }
 
     /**

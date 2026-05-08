@@ -27,12 +27,11 @@ class PopulationTest {
     class ConstructorTests {
 
         @Test
-        @DisplayName("Constructor creates empty population with correct capacity")
+        @DisplayName("Constructor creates empty population")
         void constructorCreatesEmptyPopulation() {
             Population pop = new Population(50);
 
             assertEquals(0, pop.getCurrentSize());
-            assertEquals(50, pop.getTargetSize());
         }
     }
 
@@ -82,14 +81,6 @@ class PopulationTest {
             Chromosome best = population.getBest();
 
             assertEquals(50.0, best.getFitness());
-        }
-
-        @Test
-        @DisplayName("getWorst returns lowest fitness")
-        void getWorstChromosome() {
-            Chromosome worst = population.getWorst();
-
-            assertEquals(10.0, worst.getFitness());
         }
 
         @Test
@@ -190,48 +181,6 @@ class PopulationTest {
     }
 
     @Nested
-    @DisplayName("Clear Tests")
-    class ClearTests {
-
-        @Test
-        @DisplayName("clear removes all chromosomes")
-        void clearRemovesAll() {
-            population.addChromosome(new Chromosome(3));
-            population.addChromosome(new Chromosome(3));
-
-            population.clear();
-
-            assertEquals(0, population.getCurrentSize());
-        }
-    }
-
-    @Nested
-    @DisplayName("Full Population Tests")
-    class FullPopulationTests {
-
-        @Test
-        @DisplayName("Population at capacity has currentSize equal to targetSize")
-        void isFullWhenAtCapacity() {
-            Population smallPop = new Population(3);
-            smallPop.addChromosome(new Chromosome(2));
-            smallPop.addChromosome(new Chromosome(2));
-            smallPop.addChromosome(new Chromosome(2));
-
-            assertEquals(smallPop.getTargetSize(), smallPop.getCurrentSize());
-        }
-
-        @Test
-        @DisplayName("Population not at capacity has currentSize less than targetSize")
-        void isFullWhenNotAtCapacity() {
-            Population smallPop = new Population(3);
-            smallPop.addChromosome(new Chromosome(2));
-            smallPop.addChromosome(new Chromosome(2));
-
-            assertTrue(smallPop.getCurrentSize() < smallPop.getTargetSize());
-        }
-    }
-
-    @Nested
     @DisplayName("Empty Population Tests")
     class EmptyPopulationTests {
 
@@ -245,23 +194,6 @@ class PopulationTest {
         @DisplayName("getAverageFitness returns 0 for empty population")
         void getAverageFitnessEmpty() {
             assertEquals(0.0, population.getAverageFitness());
-        }
-    }
-
-    @Nested
-    @DisplayName("Replace Chromosome Tests")
-    class ReplaceChromosomeTests {
-
-        @Test
-        @DisplayName("setChromosome replaces at index")
-        void setChromosomeReplaces() {
-            Chromosome original = new Chromosome(new int[]{1, 2, 3});
-            Chromosome replacement = new Chromosome(new int[]{4, 5, 6});
-
-            population.addChromosome(original);
-            population.setChromosome(0, replacement);
-
-            assertEquals(replacement, population.getChromosome(0));
         }
     }
 

@@ -32,9 +32,6 @@ public class GeneticAlgorithmConfig {
     private int convergenceGenerations = 50;
     private double convergenceThreshold = 0.001;
 
-    // Target fitness (optional early stopping)
-    private Double targetFitness = null;
-
     // Repair
     private boolean repairEnabled = true;
 
@@ -149,17 +146,6 @@ public class GeneticAlgorithmConfig {
     }
 
     /**
-     * Sets a target fitness for early stopping.
-     *
-     * @param targetFitness fitness value to stop at (null to disable)
-     * @return this config for chaining
-     */
-    public GeneticAlgorithmConfig targetFitness(Double targetFitness) {
-        this.targetFitness = targetFitness;
-        return this;
-    }
-
-    /**
      * Enables or disables constraint repair.
      *
      * @param enabled true to repair chromosomes after genetic operations
@@ -219,66 +205,12 @@ public class GeneticAlgorithmConfig {
         return convergenceThreshold;
     }
 
-    public Double getTargetFitness() {
-        return targetFitness;
-    }
-
     public boolean isRepairEnabled() {
         return repairEnabled;
     }
 
     public Long getSeed() {
         return seed;
-    }
-
-    // ==================== Setters ====================
-
-    public void setPopulationSize(int populationSize) {
-        this.populationSize = populationSize;
-    }
-
-    public void setMaxGenerations(int maxGenerations) {
-        this.maxGenerations = maxGenerations;
-    }
-
-    public void setMutationRate(double mutationRate) {
-        this.mutationRate = mutationRate;
-    }
-
-    public void setCrossoverRate(double crossoverRate) {
-        this.crossoverRate = crossoverRate;
-    }
-
-    public void setElitePercentage(double elitePercentage) {
-        this.elitePercentage = elitePercentage;
-    }
-
-    public void setTournamentSize(int tournamentSize) {
-        this.tournamentSize = tournamentSize;
-    }
-
-    public void setConvergenceEnabled(boolean convergenceEnabled) {
-        this.convergenceEnabled = convergenceEnabled;
-    }
-
-    public void setConvergenceGenerations(int convergenceGenerations) {
-        this.convergenceGenerations = convergenceGenerations;
-    }
-
-    public void setConvergenceThreshold(double convergenceThreshold) {
-        this.convergenceThreshold = convergenceThreshold;
-    }
-
-    public void setTargetFitness(Double targetFitness) {
-        this.targetFitness = targetFitness;
-    }
-
-    public void setRepairEnabled(boolean repairEnabled) {
-        this.repairEnabled = repairEnabled;
-    }
-
-    public void setSeed(Long seed) {
-        this.seed = seed;
     }
 
     // ==================== Presets ====================

@@ -309,37 +309,4 @@ class FitnessCalculatorTest {
         }
     }
 
-    @Nested
-    @DisplayName("Theoretical Maximum Tests")
-    class TheoreticalMaxTests {
-
-        @Test
-        @DisplayName("Theoretical maximum is students * first choice weight")
-        void theoreticalMax() {
-            double max = calculator.getTheoreticalMaxFitness();
-
-            // 5 students * 100 = 500
-            assertEquals(500.0, max);
-        }
-    }
-
-    @Nested
-    @DisplayName("Penalty Weight Configuration Tests")
-    class PenaltyWeightTests {
-
-        @Test
-        @DisplayName("Custom penalty weights affect calculation")
-        void customPenaltyWeights() {
-            calculator.setCapacityPenaltyWeight(100.0);
-            calculator.setGpaPenaltyWeight(50.0);
-            calculator.setPartnerPenaltyWeight(75.0);
-
-            // Dave (2.0) to P3 (requires 3.0) -> violation with custom weight
-            Chromosome c = new Chromosome(new int[]{1, 1, 1, 3, 1});
-
-            double gpaPenalty = calculator.calculateGpaPenalty(c);
-
-            assertEquals(50.0, gpaPenalty);
-        }
-    }
 }

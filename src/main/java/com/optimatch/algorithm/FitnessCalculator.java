@@ -214,24 +214,6 @@ public class FitnessCalculator {
         return counts;
     }
 
-    /**
-     * Calculates the theoretical maximum fitness.
-     * This is the fitness if every student with at least one preference
-     * got their first choice, with no constraint violations.
-     * Students without preferences contribute zero to the maximum.
-     *
-     * @return the theoretical maximum fitness
-     */
-    public double getTheoreticalMaxFitness() {
-        return preferenceMap.size() * (double) Preference.WEIGHT_FIRST_CHOICE;
-    }
-
-    /**
-     * Returns the number of students managed by this calculator.
-     * Equal to the chromosome length used by the algorithm.
-     *
-     * @return the student count
-     */
     public int getStudentCount() {
         return students.size();
     }
@@ -287,55 +269,6 @@ public class FitnessCalculator {
         return distribution;
     }
 
-    // Setters for penalty weights
-
-    /**
-     * Sets the capacity penalty weight.
-     *
-     * @param weight the penalty weight for each unit of capacity violation
-     */
-    public void setCapacityPenaltyWeight(double weight) {
-        this.capacityPenaltyWeight = weight;
-    }
-
-    /**
-     * Sets the GPA penalty weight.
-     *
-     * @param weight the penalty weight for each GPA violation
-     */
-    public void setGpaPenaltyWeight(double weight) {
-        this.gpaPenaltyWeight = weight;
-    }
-
-    /**
-     * Sets the partner separation penalty weight.
-     *
-     * @param weight the penalty weight for each separated partner pair
-     */
-    public void setPartnerPenaltyWeight(double weight) {
-        this.partnerPenaltyWeight = weight;
-    }
-
-    /**
-     * Gets the student ID for a given index.
-     *
-     * @param index the student index
-     * @return the student ID
-     */
-    public int getStudentIdForIndex(int index) {
-        return studentIndexToId.get(index);
-    }
-
-    /**
-     * Gets the student index for a given ID.
-     *
-     * @param studentId the student ID
-     * @return the student index, or null if not found
-     */
-    public Integer getIndexForStudentId(int studentId) {
-        return studentIdToIndex.get(studentId);
-    }
-
     /**
      * Holds a detailed breakdown of fitness components.
      */
@@ -373,10 +306,6 @@ public class FitnessCalculator {
 
         public double getTotalFitness() {
             return totalFitness;
-        }
-
-        public double getTotalPenalty() {
-            return capacityPenalty + gpaPenalty + partnerPenalty;
         }
 
         @Override

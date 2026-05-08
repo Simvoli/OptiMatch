@@ -194,17 +194,17 @@ public class AlgorithmViewModel {
         executor.submit(() -> {
             try {
                 GeneticAlgorithmConfig config = buildConfig();
-                MatchingService.MatchingResult result = matchingService.runMatching(config);
+                AlgorithmRun run = matchingService.runMatching(config);
 
                 Platform.runLater(() -> {
                     running.set(false);
-                    latestRunId.set(result.getRun().getId());
+                    latestRunId.set(run.getId());
                     refresh();
                     statusMessage.set(String.format(
                             "Completed! Fitness: %.2f, Generations: %d, Time: %.2fs",
-                            result.getBestFitness(),
-                            result.getGenerations(),
-                            result.getExecutionTimeMs() / 1000.0
+                            run.getBestFitness(),
+                            run.getGenerations(),
+                            run.getExecutionTimeMs() / 1000.0
                     ));
                 });
 
