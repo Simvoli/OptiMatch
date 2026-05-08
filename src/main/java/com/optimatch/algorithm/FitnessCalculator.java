@@ -216,13 +216,24 @@ public class FitnessCalculator {
 
     /**
      * Calculates the theoretical maximum fitness.
-     * This is the fitness if all students got their first choice
-     * with no constraint violations.
+     * This is the fitness if every student with at least one preference
+     * got their first choice, with no constraint violations.
+     * Students without preferences contribute zero to the maximum.
      *
      * @return the theoretical maximum fitness
      */
     public double getTheoreticalMaxFitness() {
-        return students.size() * Preference.WEIGHT_FIRST_CHOICE;
+        return preferenceMap.size() * (double) Preference.WEIGHT_FIRST_CHOICE;
+    }
+
+    /**
+     * Returns the number of students managed by this calculator.
+     * Equal to the chromosome length used by the algorithm.
+     *
+     * @return the student count
+     */
+    public int getStudentCount() {
+        return students.size();
     }
 
     /**

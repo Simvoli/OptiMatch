@@ -10,7 +10,7 @@ import java.util.Set;
  * Preserves the best solutions from one generation to the next,
  * ensuring that the best fitness never decreases.
  *
- * Recommended: Keep top 5-10% unchanged.
+ * Recommended: Keep top 5-10% unchanged (from CLAUDE.md specification).
  */
 public class ElitismOperator {
 
@@ -127,41 +127,6 @@ public class ElitismOperator {
     }
 
     /**
-     * Applies elitism by injecting elite into a new population.
-     * Replaces the worst individuals in the new population with elite.
-     *
-     * @param elite         the elite chromosomes to preserve
-     * @param newPopulation the new population to inject elite into
-     */
-    public void applyElitism(List<Chromosome> elite, Population newPopulation) {
-        if (elite.isEmpty()) {
-            return;
-        }
-
-        newPopulation.sortByFitness();
-        int popSize = newPopulation.getCurrentSize();
-
-        // Replace worst individuals with elite
-        for (int i = 0; i < elite.size() && i < popSize; i++) {
-            int replaceIndex = popSize - 1 - i; // Start from worst
-            newPopulation.setChromosome(replaceIndex, elite.get(i).copy());
-        }
-    }
-
-    /**
-     * Applies elitism by adding elite to a population list.
-     * Used when building a new population from scratch.
-     *
-     * @param elite             the elite chromosomes to preserve
-     * @param newChromosomes    the list of new chromosomes being built
-     */
-    public void addEliteToList(List<Chromosome> elite, List<Chromosome> newChromosomes) {
-        for (Chromosome eliteChromosome : elite) {
-            newChromosomes.add(eliteChromosome.copy());
-        }
-    }
-
-    /**
      * Creates a new population with elite preserved and remaining slots
      * available for new offspring.
      *
@@ -241,7 +206,7 @@ public class ElitismOperator {
 
     /**
      * Sets the elite percentage.
-     * Recommended values: 0.05-0.10 (5-10%)
+     * Recommended values: 0.05-0.10 (5-10%) from CLAUDE.md specification.
      *
      * @param elitePercentage the percentage (0.0 to 1.0)
      * @throws IllegalArgumentException if not in valid range

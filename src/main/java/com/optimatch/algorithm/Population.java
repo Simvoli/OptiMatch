@@ -13,7 +13,6 @@ public class Population {
 
     private List<Chromosome> chromosomes;
     private int size;
-    private boolean isSorted;
 
     /**
      * Creates an empty population with the specified capacity.
@@ -23,7 +22,6 @@ public class Population {
     public Population(int size) {
         this.size = size;
         this.chromosomes = new ArrayList<>(size);
-        this.isSorted = false;
     }
 
     /**
@@ -34,7 +32,6 @@ public class Population {
     public Population(List<Chromosome> chromosomes) {
         this.chromosomes = new ArrayList<>(chromosomes);
         this.size = chromosomes.size();
-        this.isSorted = false;
     }
 
     /**
@@ -63,7 +60,6 @@ public class Population {
      */
     public void addChromosome(Chromosome chromosome) {
         chromosomes.add(chromosome);
-        isSorted = false;
     }
 
     /**
@@ -84,7 +80,6 @@ public class Population {
      */
     public void setChromosome(int index, Chromosome chromosome) {
         chromosomes.set(index, chromosome);
-        isSorted = false;
     }
 
     /**
@@ -117,12 +112,13 @@ public class Population {
     /**
      * Sorts the population by fitness (best first).
      * Higher fitness chromosomes come first.
+     *
+     * Performed unconditionally because chromosome fitness values can be
+     * mutated externally (via {@link Chromosome#setFitness}), making any
+     * cached sort flag unreliable.
      */
     public void sortByFitness() {
-        if (!isSorted) {
-            Collections.sort(chromosomes);
-            isSorted = true;
-        }
+        Collections.sort(chromosomes);
     }
 
     /**
@@ -243,7 +239,6 @@ public class Population {
      */
     public void clear() {
         chromosomes.clear();
-        isSorted = false;
     }
 
     /**
@@ -254,7 +249,6 @@ public class Population {
     public void replaceAll(List<Chromosome> newChromosomes) {
         chromosomes.clear();
         chromosomes.addAll(newChromosomes);
-        isSorted = false;
     }
 
     /**

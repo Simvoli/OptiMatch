@@ -36,7 +36,7 @@ public class Student {
         this.studentId = studentId;
         this.name = name;
         this.email = email;
-        this.gpa = gpa;
+        setGpa(gpa);
         this.partnerId = partnerId;
     }
 
@@ -124,9 +124,13 @@ public class Student {
     /**
      * Sets the student's GPA.
      *
-     * @param gpa the GPA (should be between 0.00 and 4.00)
+     * @param gpa the GPA (must be between 0.00 and 4.00)
+     * @throws IllegalArgumentException if outside [0.0, 4.0]
      */
     public void setGpa(double gpa) {
+        if (gpa < 0.0 || gpa > 4.0) {
+            throw new IllegalArgumentException("GPA must be between 0.0 and 4.0: " + gpa);
+        }
         this.gpa = gpa;
     }
 

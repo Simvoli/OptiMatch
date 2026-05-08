@@ -41,9 +41,9 @@ public class Project {
         this.code = code;
         this.name = name;
         this.description = description;
-        this.minCapacity = minCapacity;
-        this.maxCapacity = maxCapacity;
-        this.requiredGpa = requiredGpa;
+        setMinCapacity(minCapacity);
+        setMaxCapacity(maxCapacity);
+        setRequiredGpa(requiredGpa);
     }
 
     /**
@@ -130,9 +130,13 @@ public class Project {
     /**
      * Sets the minimum capacity.
      *
-     * @param minCapacity the minimum number of students required
+     * @param minCapacity the minimum number of students required (must be &gt;= 0)
+     * @throws IllegalArgumentException if negative
      */
     public void setMinCapacity(int minCapacity) {
+        if (minCapacity < 0) {
+            throw new IllegalArgumentException("Minimum capacity cannot be negative: " + minCapacity);
+        }
         this.minCapacity = minCapacity;
     }
 
@@ -148,9 +152,13 @@ public class Project {
     /**
      * Sets the maximum capacity.
      *
-     * @param maxCapacity the maximum number of students allowed
+     * @param maxCapacity the maximum number of students allowed (must be &gt;= 1)
+     * @throws IllegalArgumentException if less than 1
      */
     public void setMaxCapacity(int maxCapacity) {
+        if (maxCapacity < 1) {
+            throw new IllegalArgumentException("Maximum capacity must be at least 1: " + maxCapacity);
+        }
         this.maxCapacity = maxCapacity;
     }
 
@@ -166,9 +174,13 @@ public class Project {
     /**
      * Sets the required GPA.
      *
-     * @param requiredGpa the minimum GPA required
+     * @param requiredGpa the minimum GPA required (0.0 to 4.0)
+     * @throws IllegalArgumentException if outside [0.0, 4.0]
      */
     public void setRequiredGpa(double requiredGpa) {
+        if (requiredGpa < 0.0 || requiredGpa > 4.0) {
+            throw new IllegalArgumentException("Required GPA must be between 0.0 and 4.0: " + requiredGpa);
+        }
         this.requiredGpa = requiredGpa;
     }
 

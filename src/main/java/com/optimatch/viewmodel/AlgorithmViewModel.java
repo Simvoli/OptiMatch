@@ -9,13 +9,13 @@ import com.optimatch.service.MatchingService;
 import com.optimatch.service.ProjectService;
 import com.optimatch.service.ServiceException;
 import com.optimatch.service.StudentService;
+import com.optimatch.util.AppLifecycle;
 import javafx.application.Platform;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * ViewModel for the Algorithm configuration and execution screen.
@@ -27,12 +27,8 @@ public class AlgorithmViewModel {
     private final StudentService studentService;
     private final ProjectService projectService;
 
-    // Use daemon thread so it doesn't prevent app from closing
-    private final ExecutorService executor = Executors.newSingleThreadExecutor(r -> {
-        Thread t = new Thread(r, "GA-Executor");
-        t.setDaemon(true);
-        return t;
-    });
+    // Shared executor managed by AppLifecycle; shut down with the application.
+    private final ExecutorService executor = AppLifecycle.getBackgroundExecutor();
 
     // Data summary
     private final IntegerProperty studentCount = new SimpleIntegerProperty(0);
@@ -288,10 +284,12 @@ public class AlgorithmViewModel {
     }
 
     /**
-     * Shuts down the executor service.
+     * Shuts down the shared background executor.
+     * Normally invoked centrally via {@link AppLifecycle#shutdown()} on
+     * application stop; exposed here for tests and tool-driven shutdowns.
      */
     public void shutdown() {
-        executor.shutdownNow();
+        AppLifecycle.shutdown();
     }
 
     // ==================== Property Getters ====================

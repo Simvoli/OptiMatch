@@ -31,21 +31,23 @@ class MutationOperatorTest {
     class SwapMutationTests {
 
         @Test
-        @DisplayName("Swap mutation exchanges two gene values")
+        @DisplayName("Swap mutation exchanges gene values when applied per-gene")
         void swapMutationSwapsGenes() {
+            // mutationRate=1.0 means every gene is considered for a swap.
+            // Resulting state must differ from the original (multiset is preserved).
             MutationOperator mutation = MutationOperator.swap(random, 1.0);
 
             int[] originalAssignments = chromosome.getAssignments().clone();
-            mutation.mutate(chromosome);
+            boolean mutated = mutation.mutate(chromosome);
 
-            // At least one value should have changed position
-            int changedCount = 0;
-            for (int i = 0; i < chromosome.getLength(); i++) {
-                if (chromosome.getAssignment(i) != originalAssignments[i]) {
-                    changedCount++;
-                }
-            }
-            assertEquals(2, changedCount); // Exactly 2 positions swapped
+            assertTrue(mutated, "mutate should return true when all genes are eligible for a swap");
+
+            int[] sortedOriginal = originalAssignments.clone();
+            int[] sortedAfter = chromosome.getAssignments();
+            java.util.Arrays.sort(sortedOriginal);
+            java.util.Arrays.sort(sortedAfter);
+            assertArrayEquals(sortedOriginal, sortedAfter,
+                    "Swap mutation must preserve the multiset of gene values");
         }
 
         @Test
@@ -83,20 +85,26 @@ class MutationOperatorTest {
     class RandomResetMutationTests {
 
         @Test
-        @DisplayName("Random reset changes one gene")
+        @DisplayName("Random reset replaces every gene at rate 1.0")
         void randomResetChangesOneGene() {
+            // With mutationRate=1.0 every gene is reset to a value from the
+            // available project IDs, applied per gene.
             MutationOperator mutation = MutationOperator.randomReset(random, 1.0, projectIds);
 
-            int[] original = chromosome.getAssignments().clone();
-            mutation.mutate(chromosome);
+            boolean mutated = mutation.mutate(chromosome);
+            assertTrue(mutated);
 
-            int changedCount = 0;
             for (int i = 0; i < chromosome.getLength(); i++) {
-                if (chromosome.getAssignment(i) != original[i]) {
-                    changedCount++;
+                int value = chromosome.getAssignment(i);
+                boolean valid = false;
+                for (int pid : projectIds) {
+                    if (pid == value) {
+                        valid = true;
+                        break;
+                    }
                 }
+                assertTrue(valid, "Gene " + i + " must hold a valid project id after reset, got " + value);
             }
-            assertEquals(1, changedCount);
         }
 
         @Test

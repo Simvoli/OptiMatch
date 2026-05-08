@@ -35,7 +35,7 @@ public class MutationOperator {
     public MutationOperator(Random random) {
         this.random = random;
         this.method = MutationMethod.SWAP;
-        this.mutationRate = 0.02; // Default range (0.01-0.05)
+        this.mutationRate = 0.02; // Default from CLAUDE.md range (0.01-0.05)
     }
 
     /**
@@ -61,33 +61,89 @@ public class MutationOperator {
     }
 
     /**
-     * Mutates a chromosome based on the mutation rate.
-     * The chromosome is modified in place.
+     * Mutates a chromosome using a per-gene mutation rate.
+     * Each gene is considered independently with probability {@code mutationRate}.
+     * This produces a number of mutations proportional to chromosome length,
+     * which is the standard interpretation of mutation rate in GA literature.
+     *
+     * For non-localized methods (SCRAMBLE, INVERSION) the rate is applied
+     * per chromosome to avoid distorting the segment-based semantics.
      *
      * @param chromosome the chromosome to mutate
-     * @return true if mutation occurred
+     * @return true if at least one mutation occurred
      */
     public boolean mutate(Chromosome chromosome) {
-        if (random.nextDouble() > mutationRate) {
+        int length = chromosome.getLength();
+        if (length < 2) {
             return false;
         }
 
         switch (method) {
             case SWAP:
-                swapMutate(chromosome);
-                break;
+                return swapMutatePerGene(chromosome);
             case RANDOM_RESET:
-                randomResetMutate(chromosome);
-                break;
+                return randomResetMutatePerGene(chromosome);
             case SCRAMBLE:
+                if (random.nextDouble() > mutationRate) {
+                    return false;
+                }
                 scrambleMutate(chromosome);
-                break;
+                return true;
             case INVERSION:
+                if (random.nextDouble() > mutationRate) {
+                    return false;
+                }
                 inversionMutate(chromosome);
-                break;
+                return true;
+            default:
+                throw new IllegalStateException("Unknown mutation method: " + method);
         }
+    }
 
-        return true;
+    /**
+     * Per-gene swap mutation: every gene is candidate for a swap
+     * with another random gene with probability {@code mutationRate}.
+     *
+     * @param chromosome the chromosome to mutate
+     * @return true if at least one swap occurred
+     */
+    private boolean swapMutatePerGene(Chromosome chromosome) {
+        int length = chromosome.getLength();
+        boolean mutated = false;
+        for (int i = 0; i < length; i++) {
+            if (random.nextDouble() < mutationRate) {
+                int j = random.nextInt(length);
+                if (j == i) {
+                    j = (j + 1) % length;
+                }
+                chromosome.swapAssignments(i, j);
+                mutated = true;
+            }
+        }
+        return mutated;
+    }
+
+    /**
+     * Per-gene random reset mutation: every gene is replaced with a random
+     * project ID with probability {@code mutationRate}.
+     *
+     * @param chromosome the chromosome to mutate
+     * @return true if at least one gene was reset
+     */
+    private boolean randomResetMutatePerGene(Chromosome chromosome) {
+        if (availableProjectIds == null || availableProjectIds.length == 0) {
+            throw new IllegalStateException("Available project IDs must be set for random reset mutation");
+        }
+        int length = chromosome.getLength();
+        boolean mutated = false;
+        for (int i = 0; i < length; i++) {
+            if (random.nextDouble() < mutationRate) {
+                int newProject = availableProjectIds[random.nextInt(availableProjectIds.length)];
+                chromosome.setAssignment(i, newProject);
+                mutated = true;
+            }
+        }
+        return mutated;
     }
 
     /**
@@ -131,6 +187,7 @@ public class MutationOperator {
 
     /**
      * Swap mutation: swap the assignments of two random students.
+     * This is the recommended method per CLAUDE.md specification.
      *
      * Before: [A, B, C, D, E]  (swap indices 1 and 3)
      * After:  [A, D, C, B, E]
@@ -383,7 +440,7 @@ public class MutationOperator {
 
     /**
      * Sets the mutation rate.
-     * Recommended values: 0.01-0.05 
+     * Recommended values: 0.01-0.05 (from CLAUDE.md specification)
      *
      * @param mutationRate the probability of mutation (0.0 to 1.0)
      * @throws IllegalArgumentException if rate is not in [0.0, 1.0]

@@ -72,17 +72,18 @@ CREATE TABLE generation_stats (
     id INT PRIMARY KEY AUTO_INCREMENT,
     run_id INT NOT NULL,
     generation INT NOT NULL,
-    best_fitness DECIMAL(10,2),
-    average_fitness DECIMAL(10,2),
-    worst_fitness DECIMAL(10,2),
-    standard_deviation DECIMAL(10,4),
+    best_fitness DECIMAL(12,2),
+    average_fitness DECIMAL(12,2),
+    worst_fitness DECIMAL(12,2),
+    standard_deviation DECIMAL(12,4),
     valid_count INT,
-    best_ever_fitness DECIMAL(10,2),
+    best_ever_fitness DECIMAL(12,2),
     FOREIGN KEY (run_id) REFERENCES algorithm_runs(id) ON DELETE CASCADE,
     UNIQUE (run_id, generation)
 );
 
 -- Indexes for performance
+CREATE INDEX idx_students_partner ON students(partner_id);
 CREATE INDEX idx_preferences_student ON preferences(student_id);
 CREATE INDEX idx_preferences_project ON preferences(project_id);
 CREATE INDEX idx_assignments_run ON assignments(run_id);

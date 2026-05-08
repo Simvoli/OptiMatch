@@ -23,6 +23,25 @@ public class GenerationStats {
     }
 
     /**
+     * Creates a GenerationStats record without a run ID.
+     * The run ID is set later when persisting to the database.
+     *
+     * @param generation        the generation number (0-based)
+     * @param bestFitness       best fitness in this generation
+     * @param averageFitness    average fitness in this generation
+     * @param worstFitness      worst fitness in this generation
+     * @param standardDeviation fitness standard deviation
+     * @param validCount        count of valid chromosomes
+     * @param bestEverFitness   best fitness found so far (across all generations)
+     */
+    public GenerationStats(int generation, double bestFitness, double averageFitness,
+                           double worstFitness, double standardDeviation, int validCount,
+                           double bestEverFitness) {
+        this(0, generation, bestFitness, averageFitness, worstFitness,
+                standardDeviation, validCount, bestEverFitness);
+    }
+
+    /**
      * Creates a GenerationStats with all fields except id.
      *
      * @param runId             the algorithm run ID

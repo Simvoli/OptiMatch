@@ -1,5 +1,6 @@
 package com.optimatch.algorithm;
 
+import com.optimatch.model.GenerationStats;
 import com.optimatch.model.Preference;
 import com.optimatch.model.Project;
 import com.optimatch.model.Student;
@@ -49,8 +50,8 @@ public class GeneticAlgorithm {
     private Population population;
     private Chromosome bestEver;
     private int currentGeneration;
-    private boolean isRunning;
-    private boolean isStopped;
+    private volatile boolean isStopped;
+    private volatile boolean isRunning;
 
     // Statistics
     private final List<GenerationStats> generationHistory;
@@ -81,12 +82,13 @@ public class GeneticAlgorithm {
      */
     public GeneticAlgorithm(List<Student> students, List<Project> projects,
                             List<Preference> preferences, GeneticAlgorithmConfig config) {
+        config.validate();
         this.config = config;
         this.random = config.getSeed() != null ? new Random(config.getSeed()) : new Random();
 
         // Initialize components
         this.fitnessCalculator = new FitnessCalculator(students, projects, preferences);
-        this.constraintChecker = new ConstraintChecker(students, projects, random);
+        this.constraintChecker = new ConstraintChecker(students, projects, preferences, random);
 
         this.selectionOperator = new SelectionOperator(random);
         this.selectionOperator.setTournamentSize(config.getTournamentSize());
@@ -162,10 +164,7 @@ public class GeneticAlgorithm {
      * Initializes the population with random chromosomes.
      */
     private void initializePopulation() {
-        int numStudents = fitnessCalculator.getTheoreticalMaxFitness() > 0
-                ? (int) (fitnessCalculator.getTheoreticalMaxFitness() / Preference.WEIGHT_FIRST_CHOICE)
-                : 0;
-
+        int numStudents = fitnessCalculator.getStudentCount();
         int[] projectIds = constraintChecker.getProjectIds();
 
         population = Population.createRandom(
@@ -437,65 +436,6 @@ public class GeneticAlgorithm {
      */
     public interface GenerationCallback {
         void onGeneration(int generation, Population population, Chromosome bestEver);
-    }
-
-    /**
-     * Statistics for a single generation.
-     */
-    public static class GenerationStats {
-        private final int generation;
-        private final double bestFitness;
-        private final double averageFitness;
-        private final double worstFitness;
-        private final double standardDeviation;
-        private final int validCount;
-        private final double bestEverFitness;
-
-        public GenerationStats(int generation, double bestFitness, double averageFitness,
-                               double worstFitness, double standardDeviation,
-                               int validCount, double bestEverFitness) {
-            this.generation = generation;
-            this.bestFitness = bestFitness;
-            this.averageFitness = averageFitness;
-            this.worstFitness = worstFitness;
-            this.standardDeviation = standardDeviation;
-            this.validCount = validCount;
-            this.bestEverFitness = bestEverFitness;
-        }
-
-        public int getGeneration() {
-            return generation;
-        }
-
-        public double getBestFitness() {
-            return bestFitness;
-        }
-
-        public double getAverageFitness() {
-            return averageFitness;
-        }
-
-        public double getWorstFitness() {
-            return worstFitness;
-        }
-
-        public double getStandardDeviation() {
-            return standardDeviation;
-        }
-
-        public int getValidCount() {
-            return validCount;
-        }
-
-        public double getBestEverFitness() {
-            return bestEverFitness;
-        }
-
-        @Override
-        public String toString() {
-            return String.format("Gen %d: best=%.2f, avg=%.2f, worst=%.2f, valid=%d",
-                    generation, bestFitness, averageFitness, worstFitness, validCount);
-        }
     }
 
     /**

@@ -1,5 +1,6 @@
 package com.optimatch.algorithm;
 
+import com.optimatch.model.Preference;
 import com.optimatch.model.Project;
 import com.optimatch.model.Student;
 
@@ -9,9 +10,13 @@ import java.util.*;
  * Checks and repairs constraint violations in chromosomes.
  *
  * Constraints:
- * 1. Capacity: min <= assigned students <= max for each project
- * 2. GPA: student.gpa >= project.requiredGpa
+ * 1. Capacity: min &lt;= assigned students &lt;= max for each project
+ * 2. GPA: student.gpa &gt;= project.requiredGpa
  * 3. Partners: partner pairs must be assigned to the same project
+ *
+ * Repair operations are preference-aware: when a student has to be
+ * reassigned, projects from their preference list are tried first
+ * (in rank order) before falling back to any GPA-eligible project.
  */
 public class ConstraintChecker {
 
@@ -20,17 +25,33 @@ public class ConstraintChecker {
     private final Map<Integer, Project> projectMap;
     private final Map<Integer, Integer> studentIndexToId;
     private final Map<Integer, Integer> studentIdToIndex;
+    private final Map<Integer, List<Integer>> studentPreferences; // studentId -> projectIds in rank order
     private final int[] projectIds;
     private final Random random;
 
     /**
-     * Creates a ConstraintChecker with the given data.
+     * Creates a ConstraintChecker without preference information.
+     * Repair will fall back to random valid projects.
      *
      * @param students list of all students
      * @param projects list of all projects
      * @param random   random number generator for repair operations
      */
     public ConstraintChecker(List<Student> students, List<Project> projects, Random random) {
+        this(students, projects, Collections.emptyList(), random);
+    }
+
+    /**
+     * Creates a ConstraintChecker with preference information used to
+     * guide repair toward higher-preference projects when possible.
+     *
+     * @param students    list of all students
+     * @param projects    list of all projects
+     * @param preferences list of all preferences (may be empty)
+     * @param random      random number generator for repair operations
+     */
+    public ConstraintChecker(List<Student> students, List<Project> projects,
+                             List<Preference> preferences, Random random) {
         this.students = students;
         this.projects = projects;
         this.random = random;
@@ -51,6 +72,21 @@ public class ConstraintChecker {
             int studentId = students.get(i).getId();
             studentIndexToId.put(i, studentId);
             studentIdToIndex.put(studentId, i);
+        }
+
+        // Build preference lookup: studentId -> projectIds ordered by rank
+        this.studentPreferences = new HashMap<>();
+        Map<Integer, List<Preference>> grouped = new HashMap<>();
+        for (Preference pref : preferences) {
+            grouped.computeIfAbsent(pref.getStudentId(), k -> new ArrayList<>()).add(pref);
+        }
+        for (Map.Entry<Integer, List<Preference>> entry : grouped.entrySet()) {
+            entry.getValue().sort(Comparator.comparingInt(Preference::getRank));
+            List<Integer> orderedProjects = new ArrayList<>(entry.getValue().size());
+            for (Preference pref : entry.getValue()) {
+                orderedProjects.add(pref.getProjectId());
+            }
+            studentPreferences.put(entry.getKey(), orderedProjects);
         }
     }
 
@@ -189,7 +225,7 @@ public class ConstraintChecker {
 
     /**
      * Repairs all constraint violations in a chromosome.
-     * Applies repairs in order: Partners -> GPA -> Capacity
+     * Applies repairs in order: GPA -&gt; Partners -&gt; Capacity.
      *
      * @param chromosome the chromosome to repair
      * @return true if all violations were successfully repaired
@@ -197,13 +233,13 @@ public class ConstraintChecker {
     public boolean repair(Chromosome chromosome) {
         boolean success = true;
 
-        // 1. Repair partner violations first (assigns partners together)
-        success &= repairPartners(chromosome);
-
-        // 2. Repair GPA violations (move students to valid projects)
+        // 1. Fix GPA violations first so partner repair has correct constraints
         success &= repairGpa(chromosome);
 
-        // 3. Repair capacity violations (rebalance assignments)
+        // 2. Bring partner pairs together (preserves both GPAs)
+        success &= repairPartners(chromosome);
+
+        // 3. Rebalance capacity last
         success &= repairCapacity(chromosome);
 
         // Update validity flag
@@ -214,57 +250,58 @@ public class ConstraintChecker {
 
     /**
      * Repairs partner violations by assigning partners to the same project.
-     * Uses the project of the partner with higher GPA or first partner if equal.
+     * The chosen project must satisfy both partners' GPA requirements.
      *
      * @param chromosome the chromosome to repair
-     * @return true if repair was successful
+     * @return true if all partner violations were repaired
      */
     public boolean repairPartners(Chromosome chromosome) {
+        boolean allRepaired = true;
         for (int i = 0; i < chromosome.getLength(); i++) {
             Student student = students.get(i);
-            if (student.hasPartner()) {
-                Integer partnerIndex = studentIdToIndex.get(student.getPartnerId());
-                if (partnerIndex != null && partnerIndex > i) {
-                    int studentProject = chromosome.getAssignment(i);
-                    int partnerProject = chromosome.getAssignment(partnerIndex);
+            if (!student.hasPartner()) {
+                continue;
+            }
+            Integer partnerIndex = studentIdToIndex.get(student.getPartnerId());
+            if (partnerIndex == null || partnerIndex <= i) {
+                continue;
+            }
+            int studentProject = chromosome.getAssignment(i);
+            int partnerProject = chromosome.getAssignment(partnerIndex);
+            if (studentProject == partnerProject) {
+                continue;
+            }
 
-                    if (studentProject != partnerProject) {
-                        Student partner = students.get(partnerIndex);
-                        // Choose project - prefer student with higher GPA
-                        int chosenProject;
-                        if (student.getGpa() >= partner.getGpa()) {
-                            chosenProject = studentProject;
-                        } else {
-                            chosenProject = partnerProject;
-                        }
+            Student partner = students.get(partnerIndex);
 
-                        // Check if chosen project meets both GPAs
-                        Project project = projectMap.get(chosenProject);
-                        if (project != null) {
-                            boolean studentMeetsGpa = project.meetsGpaRequirement(student.getGpa());
-                            boolean partnerMeetsGpa = project.meetsGpaRequirement(partner.getGpa());
+            // Try keeping one of the existing assignments if it works for both
+            Project sp = projectMap.get(studentProject);
+            Project pp = projectMap.get(partnerProject);
+            Integer chosen = null;
+            if (sp != null && sp.meetsGpaRequirement(student.getGpa())
+                    && sp.meetsGpaRequirement(partner.getGpa())) {
+                chosen = studentProject;
+            } else if (pp != null && pp.meetsGpaRequirement(student.getGpa())
+                    && pp.meetsGpaRequirement(partner.getGpa())) {
+                chosen = partnerProject;
+            } else {
+                chosen = findValidProjectForBoth(student, partner);
+            }
 
-                            if (studentMeetsGpa && partnerMeetsGpa) {
-                                chromosome.setAssignment(i, chosenProject);
-                                chromosome.setAssignment(partnerIndex, chosenProject);
-                            } else {
-                                // Find a project that works for both
-                                Integer validProject = findValidProjectForBoth(student, partner);
-                                if (validProject != null) {
-                                    chromosome.setAssignment(i, validProject);
-                                    chromosome.setAssignment(partnerIndex, validProject);
-                                }
-                            }
-                        }
-                    }
-                }
+            if (chosen != null) {
+                chromosome.setAssignment(i, chosen);
+                chromosome.setAssignment(partnerIndex, chosen);
+            } else {
+                allRepaired = false;
             }
         }
-        return true;
+        return allRepaired;
     }
 
     /**
-     * Repairs GPA violations by moving students to valid projects.
+     * Repairs GPA violations by moving students to projects whose
+     * requirements they meet. If the student has a partner, both are
+     * relocated to a project that satisfies both GPAs.
      *
      * @param chromosome the chromosome to repair
      * @return true if all GPA violations were repaired
@@ -277,22 +314,30 @@ public class ConstraintChecker {
             int projectId = chromosome.getAssignment(i);
             Project project = projectMap.get(projectId);
 
-            if (project != null && !project.meetsGpaRequirement(student.getGpa())) {
-                // Find a valid project for this student
-                Integer validProject = findValidProjectForStudent(student);
-                if (validProject != null) {
-                    chromosome.setAssignment(i, validProject);
+            if (project == null || project.meetsGpaRequirement(student.getGpa())) {
+                continue;
+            }
 
-                    // If student has partner, move partner too
-                    if (student.hasPartner()) {
-                        Integer partnerIndex = studentIdToIndex.get(student.getPartnerId());
-                        if (partnerIndex != null) {
-                            chromosome.setAssignment(partnerIndex, validProject);
-                        }
-                    }
-                } else {
-                    allRepaired = false;
-                }
+            Integer validProject;
+            Integer partnerIndex = student.hasPartner()
+                    ? studentIdToIndex.get(student.getPartnerId())
+                    : null;
+
+            if (partnerIndex != null) {
+                Student partner = students.get(partnerIndex);
+                validProject = findValidProjectForBoth(student, partner);
+            } else {
+                validProject = findValidProjectForStudent(student);
+            }
+
+            if (validProject == null) {
+                allRepaired = false;
+                continue;
+            }
+
+            chromosome.setAssignment(i, validProject);
+            if (partnerIndex != null) {
+                chromosome.setAssignment(partnerIndex, validProject);
             }
         }
 
@@ -300,19 +345,19 @@ public class ConstraintChecker {
     }
 
     /**
-     * Repairs capacity violations by rebalancing assignments.
+     * Repairs capacity violations by moving students from over-capacity
+     * projects to under-capacity ones. Bounded by a hard iteration cap so
+     * the loop cannot run unboundedly even if move semantics change.
      *
      * @param chromosome the chromosome to repair
-     * @return true if all capacity violations were repaired
+     * @return true if all capacity violations were resolved
      */
     public boolean repairCapacity(Chromosome chromosome) {
-        int maxIterations = students.size() * 2;
-        int iterations = 0;
+        int maxIterations = Math.max(students.size() * 4, 64);
 
-        while (iterations < maxIterations) {
+        for (int iteration = 0; iteration < maxIterations; iteration++) {
             Map<Integer, Integer> projectCounts = countStudentsPerProject(chromosome);
 
-            // Find overflowing and underflowing projects
             List<Integer> overflowProjects = new ArrayList<>();
             List<Integer> underflowProjects = new ArrayList<>();
 
@@ -326,66 +371,49 @@ public class ConstraintChecker {
             }
 
             if (overflowProjects.isEmpty() && underflowProjects.isEmpty()) {
-                return true; // All fixed
+                return true;
             }
 
-            // Move students from overflow to underflow
             boolean moved = false;
             for (int overflowProjectId : overflowProjects) {
-                int[] studentsInProject = chromosome.getStudentsInProject(overflowProjectId);
-                Project overflowProject = projectMap.get(overflowProjectId);
-                int excess = studentsInProject.length - overflowProject.getMaxCapacity();
-
-                for (int j = 0; j < excess && j < studentsInProject.length; j++) {
-                    int studentIndex = studentsInProject[studentsInProject.length - 1 - j];
+                int[] inProject = chromosome.getStudentsInProject(overflowProjectId);
+                for (int j = inProject.length - 1; j >= 0; j--) {
+                    int studentIndex = inProject[j];
                     Student student = students.get(studentIndex);
 
-                    // Skip if has partner (handled separately)
+                    // Skip partnered students; partner repair handles them
                     if (student.hasPartner()) {
                         continue;
                     }
 
-                    // Try to move to underflow project
-                    for (int underflowProjectId : underflowProjects) {
-                        Project underflowProject = projectMap.get(underflowProjectId);
-                        if (underflowProject.meetsGpaRequirement(student.getGpa())) {
-                            chromosome.setAssignment(studentIndex, underflowProjectId);
-                            moved = true;
+                    // Prefer underflow projects that fit the student's GPA
+                    Integer target = null;
+                    for (int underId : underflowProjects) {
+                        Project under = projectMap.get(underId);
+                        if (under != null && under.meetsGpaRequirement(student.getGpa())) {
+                            target = underId;
                             break;
                         }
                     }
+                    // Otherwise any project with free capacity
+                    if (target == null) {
+                        target = findValidProjectWithCapacity(student, chromosome);
+                    }
 
-                    if (moved) {
+                    if (target != null && target != overflowProjectId) {
+                        chromosome.setAssignment(studentIndex, target);
+                        moved = true;
                         break;
                     }
                 }
-
                 if (moved) {
                     break;
                 }
             }
 
             if (!moved) {
-                // Try random reassignment
-                if (!overflowProjects.isEmpty()) {
-                    int overflowProjectId = overflowProjects.get(0);
-                    int[] studentsInProject = chromosome.getStudentsInProject(overflowProjectId);
-                    if (studentsInProject.length > 0) {
-                        int studentIndex = studentsInProject[random.nextInt(studentsInProject.length)];
-                        Student student = students.get(studentIndex);
-                        if (!student.hasPartner()) {
-                            Integer newProject = findValidProjectWithCapacity(student, chromosome);
-                            if (newProject != null) {
-                                chromosome.setAssignment(studentIndex, newProject);
-                                moved = true;
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (!moved) {
-                iterations++;
+                // No progress possible without breaking GPA — give up
+                return checkCapacity(chromosome);
             }
         }
 
@@ -410,26 +438,40 @@ public class ConstraintChecker {
     }
 
     /**
-     * Finds a valid project for a student (meets GPA requirement).
+     * Finds a valid project for a student. Preference list is consulted
+     * first (in rank order); only if no preferred project is GPA-eligible
+     * the search falls back to a random eligible project.
      *
      * @param student the student
      * @return a valid project ID, or null if none found
      */
     private Integer findValidProjectForStudent(Student student) {
-        List<Integer> validProjects = new ArrayList<>();
-        for (Project project : projects) {
-            if (project.meetsGpaRequirement(student.getGpa())) {
-                validProjects.add(project.getId());
+        List<Integer> prefs = studentPreferences.get(student.getId());
+        if (prefs != null) {
+            for (int projectId : prefs) {
+                Project p = projectMap.get(projectId);
+                if (p != null && p.meetsGpaRequirement(student.getGpa())) {
+                    return projectId;
+                }
             }
         }
-        if (validProjects.isEmpty()) {
+
+        List<Integer> eligible = new ArrayList<>();
+        for (Project project : projects) {
+            if (project.meetsGpaRequirement(student.getGpa())) {
+                eligible.add(project.getId());
+            }
+        }
+        if (eligible.isEmpty()) {
             return null;
         }
-        return validProjects.get(random.nextInt(validProjects.size()));
+        return eligible.get(random.nextInt(eligible.size()));
     }
 
     /**
-     * Finds a valid project for both partners.
+     * Finds a valid project for both partners. The lower of the two GPAs
+     * defines the constraint. Preferences from either partner are
+     * preferred (highest combined rank wins).
      *
      * @param student1 first student
      * @param student2 second student
@@ -437,20 +479,43 @@ public class ConstraintChecker {
      */
     private Integer findValidProjectForBoth(Student student1, Student student2) {
         double minGpa = Math.min(student1.getGpa(), student2.getGpa());
-        List<Integer> validProjects = new ArrayList<>();
-        for (Project project : projects) {
-            if (project.meetsGpaRequirement(minGpa)) {
-                validProjects.add(project.getId());
+
+        List<Integer> prefs1 = studentPreferences.getOrDefault(student1.getId(), Collections.emptyList());
+        List<Integer> prefs2 = studentPreferences.getOrDefault(student2.getId(), Collections.emptyList());
+
+        // Combined ranking: lower combined rank means higher mutual preference
+        Map<Integer, Integer> combinedRank = new HashMap<>();
+        for (int i = 0; i < prefs1.size(); i++) {
+            combinedRank.merge(prefs1.get(i), i + 1, Integer::sum);
+        }
+        for (int i = 0; i < prefs2.size(); i++) {
+            combinedRank.merge(prefs2.get(i), i + 1, Integer::sum);
+        }
+
+        List<Map.Entry<Integer, Integer>> ranked = new ArrayList<>(combinedRank.entrySet());
+        ranked.sort(Map.Entry.comparingByValue());
+        for (Map.Entry<Integer, Integer> entry : ranked) {
+            Project p = projectMap.get(entry.getKey());
+            if (p != null && p.meetsGpaRequirement(minGpa)) {
+                return entry.getKey();
             }
         }
-        if (validProjects.isEmpty()) {
+
+        List<Integer> eligible = new ArrayList<>();
+        for (Project project : projects) {
+            if (project.meetsGpaRequirement(minGpa)) {
+                eligible.add(project.getId());
+            }
+        }
+        if (eligible.isEmpty()) {
             return null;
         }
-        return validProjects.get(random.nextInt(validProjects.size()));
+        return eligible.get(random.nextInt(eligible.size()));
     }
 
     /**
-     * Finds a valid project with available capacity.
+     * Finds a valid project with available capacity. Preferences are
+     * consulted first.
      *
      * @param student    the student
      * @param chromosome current chromosome (to check counts)
@@ -458,8 +523,22 @@ public class ConstraintChecker {
      */
     private Integer findValidProjectWithCapacity(Student student, Chromosome chromosome) {
         Map<Integer, Integer> counts = countStudentsPerProject(chromosome);
-        List<Integer> validProjects = new ArrayList<>();
 
+        List<Integer> prefs = studentPreferences.get(student.getId());
+        if (prefs != null) {
+            for (int projectId : prefs) {
+                Project p = projectMap.get(projectId);
+                if (p == null) {
+                    continue;
+                }
+                int count = counts.getOrDefault(projectId, 0);
+                if (p.meetsGpaRequirement(student.getGpa()) && count < p.getMaxCapacity()) {
+                    return projectId;
+                }
+            }
+        }
+
+        List<Integer> validProjects = new ArrayList<>();
         for (Project project : projects) {
             int count = counts.getOrDefault(project.getId(), 0);
             if (project.meetsGpaRequirement(student.getGpa())

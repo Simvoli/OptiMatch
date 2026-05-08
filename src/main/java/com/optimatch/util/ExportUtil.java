@@ -10,6 +10,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -20,9 +21,28 @@ public class ExportUtil {
 
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static final String CSV_SEPARATOR = ",";
+    /** UTF-8 BOM written at the start of CSV files so Excel detects the encoding. */
+    private static final String UTF8_BOM = "﻿";
 
     private ExportUtil() {
         // Utility class
+    }
+
+    /**
+     * Opens a UTF-8 buffered writer for the given file. CSV files
+     * additionally receive a BOM so Excel imports them correctly.
+     *
+     * @param file       target file
+     * @param withBom    whether to emit a UTF-8 BOM
+     * @return the buffered writer
+     * @throws IOException if the file cannot be opened for writing
+     */
+    private static BufferedWriter openWriter(File file, boolean withBom) throws IOException {
+        BufferedWriter writer = new BufferedWriter(new FileWriter(file, StandardCharsets.UTF_8));
+        if (withBom) {
+            writer.write(UTF8_BOM);
+        }
+        return writer;
     }
 
     /**
@@ -36,7 +56,7 @@ public class ExportUtil {
      */
     public static void exportStudentsCsv(File file, AlgorithmRun run, MatchingSummary summary,
                                          List<StudentAssignmentDetail> details) throws IOException {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+        try (BufferedWriter writer = openWriter(file, true)) {
             // Header comments
             writer.write("# OptiMatch - Student Assignment Results");
             writer.newLine();
@@ -85,7 +105,7 @@ public class ExportUtil {
      */
     public static void exportProjectsCsv(File file, AlgorithmRun run, MatchingSummary summary,
                                          List<ProjectAssignmentDetail> details) throws IOException {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+        try (BufferedWriter writer = openWriter(file, true)) {
             // Header comments
             writer.write("# OptiMatch - Project Assignment Results");
             writer.newLine();
@@ -141,7 +161,7 @@ public class ExportUtil {
     public static void exportFullReport(File file, AlgorithmRun run, MatchingSummary summary,
                                         List<StudentAssignmentDetail> studentDetails,
                                         List<ProjectAssignmentDetail> projectDetails) throws IOException {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+        try (BufferedWriter writer = openWriter(file, false)) {
             // Title
             writer.write("================================================================================");
             writer.newLine();
@@ -282,7 +302,7 @@ public class ExportUtil {
      */
     public static void exportGenerationsCsv(File file, AlgorithmRun run,
                                             List<GenerationStats> stats) throws IOException {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+        try (BufferedWriter writer = openWriter(file, true)) {
             // Header comments
             writer.write("# OptiMatch - Generation Statistics");
             writer.newLine();

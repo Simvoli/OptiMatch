@@ -46,8 +46,8 @@ class ExportUtilTest {
         summary = new MatchingSummary(1, 10, 3, 10, distribution, 800, 80.0);
 
         // Student details
-        Student alice = new Student(1, "S001", "Alice Smith", "alice@test.com", 3.5, -1);
-        Student bob = new Student(2, "S002", "Bob Jones", "bob@test.com", 3.0, -1);
+        Student alice = new Student(1, "S001", "Alice Smith", "alice@test.com", 3.5, null);
+        Student bob = new Student(2, "S002", "Bob Jones", "bob@test.com", 3.0, null);
         Project p1 = new Project(1, "CS101", "Intro to CS", null, 1, 5, 0.0);
         Project p2 = new Project(2, "CS201", "Data Structures", null, 1, 5, 2.5);
 
@@ -244,7 +244,7 @@ class ExportUtilTest {
         @Test
         @DisplayName("Handles values with commas")
         void handlesCommas() throws IOException {
-            Student student = new Student(1, "S001", "Smith, John", null, 3.0, -1);
+            Student student = new Student(1, "S001", "Smith, John", null, 3.0, null);
             Project project = new Project(1, "P1", "Project, Advanced", null, 1, 5, 0.0);
 
             List<StudentAssignmentDetail> details = List.of(

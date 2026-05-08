@@ -100,11 +100,9 @@ public class MatchingService {
             // Validate data
             validateData(students, projects);
 
-            // Create index mappings
-            Map<Integer, Integer> studentIdToIndex = new HashMap<>();
+            // Map chromosome index -> student database ID (chromosome encoding order)
             Map<Integer, Integer> indexToStudentId = new HashMap<>();
             for (int i = 0; i < students.size(); i++) {
-                studentIdToIndex.put(students.get(i).getId(), i);
                 indexToStudentId.put(i, students.get(i).getId());
             }
 
@@ -130,11 +128,11 @@ public class MatchingService {
             );
             assignmentDAO.insertBatch(assignments);
 
-            // Save generation statistics
-            List<GenerationStats> generationStats = createGenerationStats(
-                    run.getId(),
-                    algorithmResult.getHistory()
-            );
+            // Save generation statistics: stamp run ID into the records produced by the algorithm
+            List<GenerationStats> generationStats = algorithmResult.getHistory();
+            for (GenerationStats stats : generationStats) {
+                stats.setRunId(run.getId());
+            }
             generationStatsDAO.insertBatch(generationStats);
 
             // Create and return result
@@ -216,7 +214,9 @@ public class MatchingService {
     }
 
     /**
-     * Deletes an algorithm run and its assignments.
+     * Deletes an algorithm run.
+     * Assignments and generation statistics are removed automatically via
+     * ON DELETE CASCADE constraints in the schema.
      *
      * @param runId the run ID to delete
      * @return true if deletion was successful
@@ -224,7 +224,6 @@ public class MatchingService {
      */
     public boolean deleteRun(int runId) throws ServiceException {
         try {
-            assignmentDAO.deleteByRun(runId);
             return algorithmRunDAO.delete(runId);
         } catch (SQLException e) {
             throw new ServiceException("Failed to delete run: " + e.getMessage(), e);
@@ -311,34 +310,6 @@ public class MatchingService {
         }
 
         return assignments;
-    }
-
-    /**
-     * Converts algorithm generation history to persistable GenerationStats entities.
-     *
-     * @param runId   the algorithm run ID
-     * @param history the generation history from the algorithm
-     * @return list of GenerationStats entities
-     */
-    private List<GenerationStats> createGenerationStats(int runId,
-                                                        List<GeneticAlgorithm.GenerationStats> history) {
-        List<GenerationStats> statsList = new ArrayList<>();
-
-        for (GeneticAlgorithm.GenerationStats gs : history) {
-            GenerationStats stats = new GenerationStats(
-                    runId,
-                    gs.getGeneration(),
-                    gs.getBestFitness(),
-                    gs.getAverageFitness(),
-                    gs.getWorstFitness(),
-                    gs.getStandardDeviation(),
-                    gs.getValidCount(),
-                    gs.getBestEverFitness()
-            );
-            statsList.add(stats);
-        }
-
-        return statsList;
     }
 
     /**

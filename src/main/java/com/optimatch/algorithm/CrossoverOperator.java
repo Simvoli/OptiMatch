@@ -66,6 +66,11 @@ public class CrossoverOperator {
             return new Chromosome[]{parent1.copy(), parent2.copy()};
         }
 
+        // Single-gene chromosomes have nothing meaningful to cross over
+        if (parent1.getLength() < 2) {
+            return new Chromosome[]{parent1.copy(), parent2.copy()};
+        }
+
         switch (method) {
             case UNIFORM:
                 return uniformCrossover(parent1, parent2);
@@ -74,7 +79,7 @@ public class CrossoverOperator {
             case TWO_POINT:
                 return twoPointCrossover(parent1, parent2);
             default:
-                return uniformCrossover(parent1, parent2);
+                throw new IllegalStateException("Unknown crossover method: " + method);
         }
     }
 
@@ -226,9 +231,12 @@ public class CrossoverOperator {
         Chromosome offspring1 = new Chromosome(length);
         Chromosome offspring2 = new Chromosome(length);
 
-        // Two random crossover points
+        // Two distinct random crossover points so the swap segment is non-empty
         int point1 = random.nextInt(length);
         int point2 = random.nextInt(length);
+        while (point2 == point1) {
+            point2 = random.nextInt(length);
+        }
 
         // Ensure point1 < point2
         if (point1 > point2) {
@@ -317,7 +325,7 @@ public class CrossoverOperator {
 
     /**
      * Sets the crossover rate.
-     * Recommended values: 0.7-0.9
+     * Recommended values: 0.7-0.9 (from CLAUDE.md specification)
      *
      * @param crossoverRate the probability of crossover (0.0 to 1.0)
      * @throws IllegalArgumentException if rate is not in [0.0, 1.0]

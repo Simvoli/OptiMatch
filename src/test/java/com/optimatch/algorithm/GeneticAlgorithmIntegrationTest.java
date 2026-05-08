@@ -35,7 +35,7 @@ class GeneticAlgorithmIntegrationTest {
         for (int i = 1; i <= 10; i++) {
             double gpa = 2.5 + (i % 4) * 0.5; // GPAs between 2.5 and 4.0
             students.add(new Student(i, "S" + String.format("%03d", i),
-                    "Student " + i, "s" + i + "@test.com", gpa, -1));
+                    "Student " + i, "s" + i + "@test.com", gpa, null));
         }
 
         // 3 projects with different requirements
@@ -293,8 +293,8 @@ class GeneticAlgorithmIntegrationTest {
         void handlesMinimumViableScenario() {
             // 2 students, 1 project
             List<Student> minStudents = List.of(
-                    new Student(1, "S1", "Student 1", null, 3.0, -1),
-                    new Student(2, "S2", "Student 2", null, 3.0, -1)
+                    new Student(1, "S1", "Student 1", null, 3.0, null),
+                    new Student(2, "S2", "Student 2", null, 3.0, null)
             );
             List<Project> minProjects = List.of(
                     new Project(1, "P1", "Project 1", null, 1, 5, 0.0)

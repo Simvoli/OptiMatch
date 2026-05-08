@@ -29,11 +29,11 @@ class FitnessCalculatorTest {
     void setUp() {
         // Create test students
         students = Arrays.asList(
-                new Student(1, "S001", "Alice", null, 3.5, -1),
-                new Student(2, "S002", "Bob", null, 3.0, -1),
-                new Student(3, "S003", "Carol", null, 2.5, -1),
-                new Student(4, "S004", "Dave", null, 2.0, -1),
-                new Student(5, "S005", "Eve", null, 3.8, -1)
+                new Student(1, "S001", "Alice", null, 3.5, null),
+                new Student(2, "S002", "Bob", null, 3.0, null),
+                new Student(3, "S003", "Carol", null, 2.5, null),
+                new Student(4, "S004", "Dave", null, 2.0, null),
+                new Student(5, "S005", "Eve", null, 3.8, null)
         );
 
         // Create test projects

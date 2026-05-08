@@ -7,12 +7,16 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
 
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Controller for the main application window.
  * Handles navigation between different screens.
  */
 public class MainController {
+
+    private static final Logger LOGGER = Logger.getLogger(MainController.class.getName());
 
     @FXML
     private StackPane contentArea;
@@ -74,7 +78,7 @@ public class MainController {
             contentArea.getChildren().add(loader.load());
         } catch (IOException e) {
             statusLabel.setText("Error loading " + fxmlName + ": " + e.getMessage());
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Failed to load FXML: " + fxmlName, e);
         }
     }
 }

@@ -58,13 +58,13 @@ public class SelectionOperator {
     public Chromosome select(Population population) {
         switch (method) {
             case TOURNAMENT:
-                return tournamentSelect(population);
+                return tournamentSelect(population, tournamentSize);
             case ROULETTE_WHEEL:
                 return rouletteWheelSelect(population);
             case RANK:
                 return rankSelect(population);
             default:
-                return tournamentSelect(population);
+                throw new IllegalStateException("Unknown selection method: " + method);
         }
     }
 
@@ -93,9 +93,10 @@ public class SelectionOperator {
         Chromosome parent1 = select(population);
         Chromosome parent2 = select(population);
 
-        // Ensure parents are different (optional, can be disabled for performance)
+        // Try to pick distinct parents (by content). Stop after a few attempts
+        // because identical populations would loop forever.
         int attempts = 0;
-        while (parent2 == parent1 && attempts < 10) {
+        while (parent2.equals(parent1) && attempts < 10) {
             parent2 = select(population);
             attempts++;
         }
@@ -106,33 +107,12 @@ public class SelectionOperator {
     // ==================== Tournament Selection ====================
 
     /**
-     * Tournament selection: randomly select tournamentSize individuals,
-     * return the one with the highest fitness.
-     *
-     * @param population the population to select from
-     * @return the winner of the tournament
-     */
-    private Chromosome tournamentSelect(Population population) {
-        int popSize = population.getCurrentSize();
-        Chromosome best = null;
-
-        for (int i = 0; i < tournamentSize; i++) {
-            int randomIndex = random.nextInt(popSize);
-            Chromosome competitor = population.getChromosome(randomIndex);
-
-            if (best == null || competitor.getFitness() > best.getFitness()) {
-                best = competitor;
-            }
-        }
-
-        return best;
-    }
-
-    /**
-     * Tournament selection with specified size.
+     * Tournament selection: randomly select {@code tournamentSize} individuals,
+     * return the one with the highest fitness. Ties are broken randomly to
+     * avoid systematic bias toward earlier indices.
      *
      * @param population     the population to select from
-     * @param tournamentSize the number of competitors
+     * @param tournamentSize the number of competitors (must be &gt;= 2)
      * @return the winner of the tournament
      */
     public Chromosome tournamentSelect(Population population, int tournamentSize) {
@@ -144,6 +124,8 @@ public class SelectionOperator {
             Chromosome competitor = population.getChromosome(randomIndex);
 
             if (best == null || competitor.getFitness() > best.getFitness()) {
+                best = competitor;
+            } else if (competitor.getFitness() == best.getFitness() && random.nextBoolean()) {
                 best = competitor;
             }
         }
@@ -264,7 +246,7 @@ public class SelectionOperator {
 
     /**
      * Sets the tournament size.
-     * Recommended values: 3-5
+     * Recommended values: 3-5 (from CLAUDE.md specification)
      *
      * @param tournamentSize the tournament size (must be >= 2)
      * @throws IllegalArgumentException if tournamentSize < 2

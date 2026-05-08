@@ -130,7 +130,7 @@ class StudentTest {
         @Test
         @DisplayName("Students with same ID are equal")
         void equalsWithSameId() {
-            Student s1 = new Student(1, "123", "Name1", null, 3.0, -1);
+            Student s1 = new Student(1, "123", "Name1", null, 3.0, null);
             Student s2 = new Student(1, "456", "Name2", null, 2.0, 5);
 
             assertEquals(s1, s2);
@@ -140,8 +140,8 @@ class StudentTest {
         @Test
         @DisplayName("Students with different IDs are not equal")
         void notEqualsWithDifferentId() {
-            Student s1 = new Student(1, "123", "Name", null, 3.0, -1);
-            Student s2 = new Student(2, "123", "Name", null, 3.0, -1);
+            Student s1 = new Student(1, "123", "Name", null, 3.0, null);
+            Student s2 = new Student(2, "123", "Name", null, 3.0, null);
 
             assertNotEquals(s1, s2);
         }
@@ -168,7 +168,7 @@ class StudentTest {
         @Test
         @DisplayName("toString contains student information")
         void toStringContainsInfo() {
-            Student s = new Student(1, "123", "John", "john@test.com", 3.5, -1);
+            Student s = new Student(1, "123", "John", "john@test.com", 3.5, null);
             String str = s.toString();
 
             assertTrue(str.contains("id=1"));

@@ -6,12 +6,25 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Manages database connections for the OptiMatch application.
- * Implements a singleton pattern for connection management.
+ *
+ * Each call to {@link #getConnection()} returns a fresh JDBC connection;
+ * callers are expected to wrap usage in try-with-resources so the
+ * connection is closed deterministically. This avoids the previous
+ * "shared singleton + try-with-resources" hazard where one DAO call
+ * would silently close the connection used by other threads.
+ *
+ * Configuration is loaded once from {@code config.properties} (located
+ * on the classpath) on first use; {@link #configure(String, String, String)}
+ * can override settings programmatically (useful for tests).
  */
-public class DatabaseConnection {
+public final class DatabaseConnection {
+
+    private static final Logger LOGGER = Logger.getLogger(DatabaseConnection.class.getName());
 
     private static final String CONFIG_FILE = "config.properties";
     private static final String DEFAULT_URL = "jdbc:mysql://localhost:3306/optimatch";
@@ -21,21 +34,16 @@ public class DatabaseConnection {
     private static String url;
     private static String user;
     private static String password;
-    private static boolean initialized = false;
+    private static volatile boolean initialized = false;
 
-    private static Connection connection;
-
-    /**
-     * Private constructor to prevent instantiation.
-     */
     private DatabaseConnection() {
     }
 
     /**
-     * Initializes the database configuration from config.properties.
-     * Called automatically on first connection attempt.
+     * Initializes configuration from {@code config.properties}.
+     * Idempotent and thread-safe.
      */
-    private static void initialize() {
+    private static synchronized void initialize() {
         if (initialized) {
             return;
         }
@@ -49,13 +57,13 @@ public class DatabaseConnection {
                 user = props.getProperty("db.user", DEFAULT_USER);
                 password = props.getProperty("db.password", DEFAULT_PASSWORD);
             } else {
-                System.err.println("config.properties not found, using defaults");
+                LOGGER.warning("config.properties not found, using defaults");
                 url = DEFAULT_URL;
                 user = DEFAULT_USER;
                 password = DEFAULT_PASSWORD;
             }
         } catch (IOException e) {
-            System.err.println("Error loading config.properties: " + e.getMessage());
+            LOGGER.log(Level.WARNING, "Error loading config.properties", e);
             url = DEFAULT_URL;
             user = DEFAULT_USER;
             password = DEFAULT_PASSWORD;
@@ -65,62 +73,49 @@ public class DatabaseConnection {
 
     /**
      * Configures the database connection parameters manually.
-     * Overrides settings from config.properties.
+     * Overrides settings from {@code config.properties}.
      *
      * @param dbUrl      the database URL
      * @param dbUser     the database username
      * @param dbPassword the database password
      */
-    public static void configure(String dbUrl, String dbUser, String dbPassword) {
+    public static synchronized void configure(String dbUrl, String dbUser, String dbPassword) {
         url = dbUrl;
         user = dbUser;
         password = dbPassword;
         initialized = true;
-        closeConnection();
     }
 
     /**
-     * Gets a connection to the database.
-     * Creates a new connection if one doesn't exist or is closed.
+     * Returns a fresh JDBC connection. The caller must close it,
+     * preferably via try-with-resources.
      *
-     * @return an active database connection
+     * @return a new database connection
      * @throws SQLException if a connection cannot be established
      */
     public static Connection getConnection() throws SQLException {
         initialize();
-        if (connection == null || connection.isClosed()) {
-            connection = DriverManager.getConnection(url, user, password);
-        }
-        return connection;
+        return DriverManager.getConnection(url, user, password);
     }
 
     /**
-     * Closes the current database connection if open.
+     * No-op kept for backwards compatibility.
+     * Connections are now per-call and closed by their owners.
      */
     public static void closeConnection() {
-        if (connection != null) {
-            try {
-                if (!connection.isClosed()) {
-                    connection.close();
-                }
-            } catch (SQLException e) {
-                System.err.println("Error closing connection: " + e.getMessage());
-            }
-            connection = null;
-        }
+        // intentionally empty: connections are owned by the caller
     }
 
     /**
      * Tests the database connection.
      *
-     * @return true if connection is successful, false otherwise
+     * @return true if a connection can be established and closed cleanly
      */
     public static boolean testConnection() {
-        try {
-            Connection conn = getConnection();
+        try (Connection conn = getConnection()) {
             return conn != null && !conn.isClosed();
         } catch (SQLException e) {
-            System.err.println("Connection test failed: " + e.getMessage());
+            LOGGER.log(Level.WARNING, "Connection test failed", e);
             return false;
         }
     }

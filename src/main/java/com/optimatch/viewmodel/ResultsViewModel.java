@@ -87,14 +87,8 @@ public class ResultsViewModel {
             availableRuns.setAll(matchingService.getAllRuns());
 
             if (!availableRuns.isEmpty()) {
-                // Select the most recent run
-                AlgorithmRun latestRun = availableRuns.get(0);
-                for (AlgorithmRun run : availableRuns) {
-                    if (run.getRunTimestamp().isAfter(latestRun.getRunTimestamp())) {
-                        latestRun = run;
-                    }
-                }
-                selectedRun.set(latestRun);
+                // DAO already orders runs by run_timestamp DESC, so the first is the latest.
+                selectedRun.set(availableRuns.get(0));
                 statusMessage.set("Loaded " + availableRuns.size() + " runs");
             } else {
                 clearData();
