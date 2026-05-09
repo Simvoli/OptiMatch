@@ -16,7 +16,7 @@ CREATE TABLE students (
     email VARCHAR(100),
     gpa DECIMAL(3,2) NOT NULL,
     partner_id INT NULL,
-    FOREIGN KEY (partner_id) REFERENCES students(id)
+    FOREIGN KEY (partner_id) REFERENCES students(id) ON DELETE SET NULL
 );
 
 -- Projects table
